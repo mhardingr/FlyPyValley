@@ -53,7 +53,7 @@ class Camera(object):
 
 	degsPerRadian = 180.0 / pi
 	deltaThetaCap = 180 # Max degrees of motion per mouse movement
-	def __init__(self, xPos=0.0, yPos=200.0, zPos=0.0, 
+	def __init__(self, xPos=0.0, yPos=0.0, zPos=1.0, 
 					xRot=0.0, yRot=0.0, zRot=0.0):
 		self.xPos = xPos
 		self.yPos = yPos
@@ -61,6 +61,13 @@ class Camera(object):
 		self.xRot = xRot
 		self.yRot = yRot
 		self.zRot = zRot
+
+		# Line of sight vector components: initial values
+		self.xLineOfSight = 1.0
+		self.yLineOfSight = 1.0
+		self.zLineOfSight = 1.0
+
+		self.motionSpeed = .01 # world units per frame
 
 	def setRotationXYZ(self, xRot, yRot, zRot):
 		self.xRot = xRot
@@ -100,20 +107,88 @@ class Camera(object):
 			elif (self.zRot > 90.0):
 				self.zRot = 90.0
 
-	def move(self, dX, dY, dZ):
-		pass
+	def move(self, dirStr):
+		if (dirStr == ""):
+			return
+		if (dirStr == "LEFT"):
+			self.strafeLeft()
+		elif (dirStr == "RIGHT"):
+			self.strafeRight()
+		elif (dirStr == "FWD"):
+			self.moveForward()
+		elif (dirStr == "BACK"):
+			self.moveBackward()
+
+	def strafeLeft(self):
+		# Move in the negative X direction
+		speed = self.motionSpeed
+		dX = -(speed) 
+		self.yPos += dX
+
+	def strafeRight(self):
+		# Move in the positive X direction
+		speed = self.motionSpeed
+		dX = +(speed)
+		self.yPos += dX
+
+	def moveForward(self):
+		# Move in the negative z direction
+		speed = self.motionSpeed
+		dZ = -(speed)
+		self.zPos += dZ
+
+	def moveBackward(self):
+		# Move in the positive z direction
+		speed = self.motionSpeed
+		dZ = +(speed)
+		self.zPos += dZ
 
 	def cameraUpdateGLRoutine(self):
+		# Update line of sight vectors before rendering routine:
+		self.updateLineOfSightVectors()
+
+		(refPtX, refPtY, refPtZ) = self.calculateGluReferencePoint()
+		(refPtX, refPtY, refPtZ) = (0.0, 0.0, 0.0)
+
+		# Set the camera
+		gluLookAt(  self.xPos, self.yPos, self.zPos,
+					refPtX, refPtY, refPtZ,		# Insert IPD stuff here
+					0.0, 1.0, 0.0)
 
 		# Adjust cameras angle and position
 		(xRotMultiplier, yRotMultiplier, zRotMultiplier) = (1.0, 1.0, 1.0)
 		glRotatef(self.xRot, xRotMultiplier, 0.0, 0.0)
 		glRotatef(self.yRot, 0.0, yRotMultiplier, 0.0)
 		glRotatef(self.zRot, 0.0, 0.0, zRotMultiplier)
-		# Set the camera
-		gluLookAt(  0.0, 0.0, 1.0,
-					0.0, 0.0,  0.0,		# Insert IPD stuff here
-					0.0, 1.0, 0.0)
+
+	def updateLineOfSightVectors(self):
+		# To find x component: 
+		# Need component in x-y plane and x-z plane 
+		xCompPart1 = cos (self.zRot)	#  x-y plane comp
+		xCompPart2 = sin (self.yRot)	# x-z plane comp
+		self.xLineOfSight = xCompPart1 #+ xCompPart2
+
+		# To find y component:
+		# Need component in x-y plane and y-z plane
+		yCompPart1 = sin (self.zRot)	# x-y plane comp
+		yCompPart2 = sin (self.xRot) # y-z plane comp
+		self.yLineOfSight = yCompPart1 #+ yCompPart2
+
+		# To find z component
+		# Need components in x-z plane and y-z plane
+		zCompPart1 = cos(self.yRot)	# x-z plane component
+		zCompPart2 = cos(self.xRot)	# y-z plane component
+		self.zLineOfSight = zCompPart1 #+ zCompPart2
+
+	def calculateGluReferencePoint(self):
+		# Find a point that is always ahead of camera
+		# Basically, add position data to line of sight vector components
+		refPtX = self.xPos + self.xLineOfSight
+		refPtY = self.yPos + self.yLineOfSight
+		refPtZ = self.zPos + self.zLineOfSight
+
+		return (refPtX, refPtY, refPtZ)
+
 
 class OculusCamera(Camera):
 	# Stereo Camera implementation
@@ -121,7 +196,19 @@ class OculusCamera(Camera):
 	noseToPupilDistance = 0.047	# Empirical data, in world units
 	def __init__(self, world):
 		super(OculusCamera, self).__init__()
+		
 		self.worldData = world
+		(winWidth, winHeight) = (world.width, world.height)
+
+
+		self.eyeFOV = 60 # degrees of FOV
+		self.eyeAspectRatio = (winWidth / 2.0) / winHeight
+
+		# GL Perspective data for creating a frustrum in 3-D space
+		# Don't render points closer to camera than .2 world units
+		self.nearClip = 0.2 
+		# Don't render points further than 1000 world units away from camera
+		self.farClip = 1000
 		pyrift.initialize()	# Inits the Oculus Rift for data retrieval
 
 	def applyRightEye(self):
@@ -133,9 +220,11 @@ class OculusCamera(Camera):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
 
-		FOV = 60 #degrees
-		aspectRatio = width / 2.0 / height
-		gluPerspective(FOV, aspectRatio, 0.2, 1000)
+		FOV = self.eyeFOV
+		aspectRatio = self.eyeAspectRatio
+		near = self.nearClip
+		far = self.farClip
+		gluPerspective(FOV, aspectRatio, near, far)
 
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
@@ -163,9 +252,11 @@ class OculusCamera(Camera):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
 
-		FOV = 60 #degrees
-		aspectRatio = width / 2.0 / height
-		gluPerspective(FOV, aspectRatio, 0.2, 1000)
+		FOV = self.eyeFOV
+		aspectRatio = self.eyeAspectRatio
+		near = self.nearClip
+		far = self.farClip
+		gluPerspective(FOV, aspectRatio, near, far)
 
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
@@ -185,8 +276,10 @@ class OculusCamera(Camera):
 	def updateOrientationRoutine(self):
 		# (Yaw, pitch, roll) == (yRot, xRot, zRot)
 		(yRotRads, xRotRads, zRotRads) = pyrift.get_orientation()
-		print (xRotRads, yRotRads, zRotRads)
+		#print (xRotRads, yRotRads, zRotRads)
 
+		# Empirical tests show that reducing roll by 90% creates a more
+		# realistic world tilt
 		rollReduceFactor = 0.1
 		
 		# Convert rotation data to degrees for Opengl functions
@@ -195,6 +288,8 @@ class OculusCamera(Camera):
 		zRotDegs = rollReduceFactor * zRotRads * OculusCamera.degsPerRadian
 
 		self.rotateWorld(xRotDegs, yRotDegs, zRotDegs)
+
+
 
 	def rotateWorld(self, newXRot, newYRot, newZRot):
 		# Calculate dThetaX, dThetaY, dThetaZ
@@ -214,12 +309,6 @@ class OculusCamera(Camera):
 
 class Animation(object):
 	def redrawAll(self):
-		"""camera.cameraUpdateGLRoutine()
-
-		drawTerrain()
-
-		glutSwapBuffers()	# Display the buffered scene"""
-
 
 		self.practiceRender()
 
@@ -261,7 +350,7 @@ class Animation(object):
 
 		# Draw the scene to the left eye
 		glColor3f(0.0,178/255.0,200/255.0)
-		glutWireCube(0.25) # Draw wire cube
+		glutWireTeapot(1.25) # Draw wire cube
 		
 		glPopMatrix()
 
@@ -273,7 +362,7 @@ class Animation(object):
 
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
-		glutWireCube(0.25) # Draw wire cube
+		glutWireTeapot(1.25) # Draw wire cube
 		glPopMatrix()
 
 		glutSwapBuffers()
@@ -289,23 +378,32 @@ class Animation(object):
 		glVertex3f(0.0,2,-5.0)
 		glEnd()
 
-	def keyEvent(self, event):
+	def normalKeyEvent(self, eventArgs):	# Handle character events
 		escKeyAscii = 27
-		if (event[0] == chr(escKeyAscii)): # quit if pressed escape key
-			sys.exit()
-		if (event[0] == 'i'):
-			#self.initWorldData()	# reset scene
+		keysym = eventArgs[0]
+		
+		if (keysym == chr(escKeyAscii)): # quit if pressed escape key 
+			sys.exit()	
+		elif (keysym == 'i'):
+			# Reset the position of the camera
+
+			###### #BUG, oculus must be re-calibrated not reset
 			self.camera.setRotationXYZ(0.0,0.0,0.0)
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
-		if (event[0] == 'c'):
-			self.clicked = True 
-			print "KeyEvent: 'c' "
-		if (event[0] == 'r'):
-			print "KeyEvent: 'r' "
-			self.clicked = False
+		print "normal Key event handled!"
 
-		print "Key event handled!"
+	def specialKeyEvent(self, eventArgs):	# Handle arrow keys events
+		keysym = eventArgs[0]
+		# Handle arrow key events
+		if (keysym == GLUT_KEY_LEFT):
+			self.oculus.move("LEFT")	# Strafe left
+		elif (keysym == GLUT_KEY_RIGHT):
+			self.oculus.move("RIGHT")	# Strafe right
+		elif (keysym == GLUT_KEY_DOWN):
+			self.oculus.move("BACK")	# Move backwards
+		elif (keysym == GLUT_KEY_UP):
+			self.oculus.move("FWD")		# Move forwards
 
 	def mouseMoved(self, mouseXPos, mouseYPos):
 		"""
@@ -351,8 +449,9 @@ class Animation(object):
 		glutDisplayFunc(lambda : self.redrawAll())	# RedrawAll
 		glutIdleFunc(lambda : self.redrawAll())
 		glutReshapeFunc(lambda width, height: self.resizeWindow(width, height))
-		glutKeyboardFunc(lambda *event: self.keyEvent(event))
-		glutSpecialFunc(lambda *event: self.keyEvent(event)) # Handles ESC key
+		glutKeyboardFunc(lambda *eventArgs: self.normalKeyEvent(eventArgs))
+		# To handle arrow keys:
+		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
 		glutPassiveMotionFunc(lambda mouseX, mouseY: self.mouseMoved(
 																mouseX,mouseY))
 		# Fullscreen
