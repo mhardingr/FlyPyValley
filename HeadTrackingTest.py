@@ -148,12 +148,7 @@ class Camera(object):
 		self.updateLineOfSightVectors()
 
 		(refPtX, refPtY, refPtZ) = self.calculateGluReferencePoint()
-		(refPtX, refPtY, refPtZ) = (0.0, 0.0, 0.0)
-
-		# Set the camera
-		gluLookAt(  self.xPos, self.yPos, self.zPos,
-					refPtX, refPtY, refPtZ,		# Insert IPD stuff here
-					0.0, 1.0, 0.0)
+		#(refPtX, refPtY, refPtZ) = (0.0, 0.0, 0.0)
 
 		# Adjust cameras angle and position
 		(xRotMultiplier, yRotMultiplier, zRotMultiplier) = (1.0, 1.0, 1.0)
@@ -161,24 +156,35 @@ class Camera(object):
 		glRotatef(self.yRot, 0.0, yRotMultiplier, 0.0)
 		glRotatef(self.zRot, 0.0, 0.0, zRotMultiplier)
 
+		# Move the camera to its world coordinates (negative because moving
+		# the world in opposite direction)
+		glTranslatef(-self.xPos, -self.yPos, -self.zPos)
+
+		# # Set the camera
+		# gluLookAt(  self.xPos, self.yPos, self.zPos,
+		# 			refPtX, refPtY, refPtZ,		# Insert IPD stuff here
+		# 			0.0, 1.0, 0.0)
+
+
+
 	def updateLineOfSightVectors(self):
 		# To find x component: 
-		# Need component in x-y plane and x-z plane 
-		xCompPart1 = cos (self.zRot)	#  x-y plane comp
+		# Need component in x-y plane 
+		#xCompPart = cos (self.zRot)	#  x-y plane comp
 		xCompPart2 = sin (self.yRot)	# x-z plane comp
-		self.xLineOfSight = xCompPart1 #+ xCompPart2
+		self.xLineOfSight = xCompPart2 #+ xCompPart1
 
 		# To find y component:
-		# Need component in x-y plane and y-z plane
-		yCompPart1 = sin (self.zRot)	# x-y plane comp
+		# Need component in x-y plane
+		#yCompPart1 = sin (self.zRot)	# x-y plane comp
 		yCompPart2 = sin (self.xRot) # y-z plane comp
-		self.yLineOfSight = yCompPart1 #+ yCompPart2
+		self.yLineOfSight = yCompPart2 #+ yCompPart1
 
 		# To find z component
-		# Need components in x-z plane and y-z plane
-		zCompPart1 = cos(self.yRot)	# x-z plane component
+		# Need components in y-z plane
+		#zCompPart1 = cos(self.yRot)	# x-z plane component
 		zCompPart2 = cos(self.xRot)	# y-z plane component
-		self.zLineOfSight = zCompPart1 #+ zCompPart2
+		self.zLineOfSight =  zCompPart2  #+ zCompPart1 
 
 	def calculateGluReferencePoint(self):
 		# Find a point that is always ahead of camera
