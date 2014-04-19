@@ -410,13 +410,6 @@ class Animation(object):
 		elif (keysym == GLUT_KEY_UP):
 			self.oculus.move("FWD")		# Move forwards
 
-	def mouseMoved(self, mouseXPos, mouseYPos):
-
-
-		print "Mouse moved!:", mouseXPos, mouseYPos
-		self.mouse.changeCameraAngle(self.camera, mouseXPos, mouseYPos)
-
-		self.redrawAll()
 
 	def resizeWindow(self, width, height):
 		if (height == 0):
@@ -448,7 +441,6 @@ class Animation(object):
 		glutKeyboardFunc(lambda *eventArgs: self.normalKeyEvent(eventArgs))
 		# To handle arrow keys:
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
-		glutMotionFunc(lambda mouseX, mouseY: self.mouseMoved(mouseX,mouseY))
 		# Fullscreen
 		glutFullScreen()
 
