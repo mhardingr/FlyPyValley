@@ -36,10 +36,10 @@ class Mouse(object):
 		deltaHorizontal = newXPos - self.xPos
 		deltaVertical = newYPos - self.yPos
 
-		thetaXRot = deltaVertical / Mouse.verticalMoveSensitivity
-		thetaYRot = deltaHorizontal / Mouse.horizontalMoveSensitivity
+		thetaXRot = deltaVertical / Mouse.verticalMoveSensitivity	#Pitch
+		thetaYRot = deltaHorizontal / Mouse.horizontalMoveSensitivity	# Yaw
 
-		camera.rotate(thetaXRot, thetaYRot)
+		camera.rotate2D(thetaXRot, thetaYRot)
 
 
 class Camera(object):
@@ -67,7 +67,7 @@ class Camera(object):
 		self.yRot = yRot
 		self.zRot = zRot		
 
-	def rotate(self, thetaX, thetaY):
+	def rotate2D(self, thetaX, thetaY):
 		self.rotateX(thetaX)
 		self.rotateY(thetaY)
 
@@ -165,7 +165,8 @@ class Camera(object):
 
 		# Move the camera to its world coordinates (negative because moving
 		# the world in opposite direction)
-		glTranslatef(-self.xPos, -self.yPos, -self.zPos)
+		if (type(self) == Camera):
+			glTranslatef(-self.xPos, -self.yPos, -self.zPos)
 
 	def updateLineOfSightVectors(self):
 		if (type(self) == OculusCamera):
@@ -406,25 +407,16 @@ class Animation(object):
 		if (self.oculus != None):
 			self.oculus.updateOrientationRoutine()
 		if (keysym == GLUT_KEY_LEFT):
-			self.oculus.move("LEFT")	# Strafe left
+			self.camera.move("LEFT")	# Strafe left
 		elif (keysym == GLUT_KEY_RIGHT):
-			self.oculus.move("RIGHT")	# Strafe right
+			self.camera.move("RIGHT")	# Strafe right
 		elif (keysym == GLUT_KEY_DOWN):
-			self.oculus.move("BACK")	# Move backwards
+			self.camera.move("BACK")	# Move backwards
 		elif (keysym == GLUT_KEY_UP):
-			self.oculus.move("FWD")		# Move forwards
+			self.camera.move("FWD")		# Move forwards
 
 	def mouseMoved(self, mouseXPos, mouseYPos):
-		"""
-		if (self.isWarpingPointer == True):
-			# glutWarpPointer actually is triggering a mouseMoved event
-			# so catch this
-			return 
 
-		self.isWarpingPointer = True
-		glutWarpPointer(self.middleX, self.middleY)
-		self.isWarpingPointer = False
-		"""
 
 		print "Mouse moved!:", mouseXPos, mouseYPos
 		self.mouse.changeCameraAngle(self.camera, mouseXPos, mouseYPos)
