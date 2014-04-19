@@ -41,8 +41,6 @@ class Mouse(object):
 
 		camera.rotate(thetaXRot, thetaYRot)
 
-	def changeCameraPosition(self, camera ):
-		pass
 
 class Camera(object):
 
@@ -158,9 +156,6 @@ class Camera(object):
 	def cameraUpdateGLRoutine(self):
 		# Update line of sight vectors before rendering routine:
 		self.updateLineOfSightVectors()
-
-		(refPtX, refPtY, refPtZ) = self.calculateGluReferencePoint()
-		#(refPtX, refPtY, refPtZ) = (0.0, 0.0, 0.0)
 
 		# Adjust cameras angle and position
 		(xRotMultiplier, yRotMultiplier, zRotMultiplier) = (1.0, 1.0, 1.0)
@@ -469,7 +464,7 @@ class Animation(object):
 		glutPassiveMotionFunc(lambda mouseX, mouseY: self.mouseMoved(
 																mouseX,mouseY))
 		# Fullscreen
-		#glutFullScreen()
+		glutFullScreen()
 
 		# mainloop
 		glutMainLoop()
