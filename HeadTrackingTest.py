@@ -105,22 +105,21 @@ class Camera(object):
 			return
 		self.updateLineOfSightVectors()
 		if (dirStr == "LEFT"):
-			self.strafeLeft()
+			self.turnLeft()
 		elif (dirStr == "RIGHT"):
-			self.strafeRight()
+			self.turnRight()
 		elif (dirStr == "FWD"):
 			self.moveForward()
 		elif (dirStr == "BACK"):
 			self.moveBackward()
 
-	def strafeLeft(self):
-		# Move orthogonal to the line of sight 
-
+	def turnLeft(self):
+		# To turn left, add 
 		speed = self.motionSpeed
 		dX = -(speed) 
 		self.xPos += dX
 
-	def strafeRight(self):
+	def turnRight(self):
 		# Move in the positive X direction
 		speed = self.motionSpeed
 		dX = +(speed)
@@ -165,8 +164,7 @@ class Camera(object):
 
 		# Move the camera to its world coordinates (negative because moving
 		# the world in opposite direction)
-		if (type(self) == Camera):
-			glTranslatef(-self.xPos, -self.yPos, -self.zPos)
+		glTranslatef(-self.xPos, -self.yPos, -self.zPos)
 
 	def updateLineOfSightVectors(self):
 		if (type(self) == OculusCamera):
@@ -304,15 +302,12 @@ class OculusCamera(Camera):
 		self.rotateWorld(xRotDegs, yRotDegs, zRotDegs)
 
 	def rotateWorld(self, newXRot, newYRot, newZRot):
-		# Calculate dThetaX, dThetaY, dThetaZ
-		dThetaX = newXRot - self.xRot 
-		dThetaY = newYRot - self.yRot 
-		dThetaZ = newZRot - self.zRot
+		"""orientatingXRotOffset = self.orientatingXRotOffset
+		orientatingYRotOffset = self.orientatingYRotOffset
+		orientatingZRotOffset = self.orientatingZRotOffset"""
 
 		# Update camera data using Camera class methods
-		self.rotateX(dThetaX)
-		self.rotateY(dThetaY)
-		self.rotateZ(dThetaZ)
+		self.setRotationXYZ(newXRot, newYRot, newZRot)
 
 
 class Animation(object):
@@ -354,7 +349,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		self.camera.cameraUpdateGLRoutine()
+		#self.camera.cameraUpdateGLRoutine()
 
 		# Draw the scene to the left eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -366,7 +361,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		self.camera.cameraUpdateGLRoutine()
+		#self.camera.cameraUpdateGLRoutine()
 
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -407,13 +402,13 @@ class Animation(object):
 		if (self.oculus != None):
 			self.oculus.updateOrientationRoutine()
 		if (keysym == GLUT_KEY_LEFT):
-			self.camera.move("LEFT")	# Strafe left
+			self.oculus.move("LEFT")	# Strafe left
 		elif (keysym == GLUT_KEY_RIGHT):
-			self.camera.move("RIGHT")	# Strafe right
+			self.oculus.move("RIGHT")	# Strafe right
 		elif (keysym == GLUT_KEY_DOWN):
-			self.camera.move("BACK")	# Move backwards
+			self.oculus.move("BACK")	# Move backwards
 		elif (keysym == GLUT_KEY_UP):
-			self.camera.move("FWD")		# Move forwards
+			self.oculus.move("FWD")		# Move forwards
 
 	def mouseMoved(self, mouseXPos, mouseYPos):
 
@@ -453,8 +448,7 @@ class Animation(object):
 		glutKeyboardFunc(lambda *eventArgs: self.normalKeyEvent(eventArgs))
 		# To handle arrow keys:
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
-		glutMotionFunc(lambda mouseX, mouseY: self.mouseMoved(
-																mouseX,mouseY))
+		glutMotionFunc(lambda mouseX, mouseY: self.mouseMoved(mouseX,mouseY))
 		# Fullscreen
 		glutFullScreen()
 
