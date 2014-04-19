@@ -144,20 +144,20 @@ class Camera(object):
 		dY = speed * self.yLineOfSight
 		dZ = speed * self.zLineOfSight
 
-		#dX = 0
-		#dY = 0
-		#dZ = 0
-
 		self.xPos += dX
 		self.yPos += dY
 		self.zPos += dZ
 
-		"""dZ = -(speed)
-		self.zPos += dZ"""
 	def moveBackward(self):
-		# Move in the positive z direction
+		# Move along line of sight vector in opposite direction
+		# Subtract line of sight vector from position vector
 		speed = self.motionSpeed
-		dZ = +(speed)
+		dX = -speed * self.xLineOfSight
+		dY = -speed * self.yLineOfSight
+		dZ = -speed * self.zLineOfSight
+
+		self.xPos += dX
+		self.yPos += dY
 		self.zPos += dZ
 
 	def cameraUpdateGLRoutine(self):
@@ -203,9 +203,10 @@ class Camera(object):
 		yLineOfSight = yCompPitch 
 
 		# To find z component
+		# Prioritizing z-component of yaw over that of pitch
 		zCompYaw = -cos(yRotRads) # z-component of yaw
-		zCompPitch = -cos(-xRotRads) # z-component of pitch 
-		zLineOfSight =  zCompPitch +  zCompYaw 
+		zLineOfSight = zCompYaw 
+
 
 		# Now normalize lineOfSightComponents to have unit vector for LOS vect
 		sqVectorLength = (xLineOfSight**2.0 + yLineOfSight**2.0 
