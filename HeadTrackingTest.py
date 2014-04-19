@@ -63,11 +63,11 @@ class Camera(object):
 		self.zRot = zRot
 
 		# Line of sight vector components: initial values
-		self.xLineOfSight = 1.0
-		self.yLineOfSight = 1.0
-		self.zLineOfSight = 1.0
+		self.xLineOfSight = 1.0 /(3**2)
+		self.yLineOfSight = 1.0 / (3**2)
+		self.zLineOfSight = 1.0 / (3**2)
 
-		self.motionSpeed = .01 # world units per frame
+		self.motionSpeed = 1 # world units per frame
 
 	def setRotationXYZ(self, xRot, yRot, zRot):
 		self.xRot = xRot
@@ -110,6 +110,7 @@ class Camera(object):
 	def move(self, dirStr):
 		if (dirStr == ""):
 			return
+		self.updateLineOfSightVectors()
 		if (dirStr == "LEFT"):
 			self.strafeLeft()
 		elif (dirStr == "RIGHT"):
@@ -120,20 +121,30 @@ class Camera(object):
 			self.moveBackward()
 
 	def strafeLeft(self):
-		# Move in the negative X direction
+		# Move orthogonal to the line of sight 
+
 		speed = self.motionSpeed
 		dX = -(speed) 
-		self.yPos += dX
+		self.xPos += dX
 
 	def strafeRight(self):
 		# Move in the positive X direction
 		speed = self.motionSpeed
 		dX = +(speed)
-		self.yPos += dX
+		self.xPos += dX
 
 	def moveForward(self):
-		# Move in the negative z direction
+		# Move along the line of sight vector
+		# Add line of sight vector to position vector
 		speed = self.motionSpeed
+		"""dX = speed * self.xLineOfSight
+		dY = speed * self.yLineOfSight
+		dZ = speed * self.zLineOfSight
+
+		self.xPos += dX
+		self.yPos += dY
+		self.zPos += dZ"""
+
 		dZ = -(speed)
 		self.zPos += dZ
 
@@ -169,22 +180,30 @@ class Camera(object):
 
 	def updateLineOfSightVectors(self):
 		# To find x component: 
-		# Need component in x-y plane 
-		#xCompPart = cos (self.zRot)	#  x-y plane comp
-		xCompPart2 = sin (self.yRot)	# x-z plane comp
-		self.xLineOfSight = xCompPart2 #+ xCompPart1
+		xCompYaw = cos (self.yRot)	# find x-Component of yaw
+		xLineOfSight = xCompYaw
 
 		# To find y component:
-		# Need component in x-y plane
-		#yCompPart1 = sin (self.zRot)	# x-y plane comp
-		yCompPart2 = sin (self.xRot) # y-z plane comp
-		self.yLineOfSight = yCompPart2 #+ yCompPart1
+		yCompPitch = sin (self.xRot) # y component of pitch
+		yLineOfSight = yCompPitch #+ yCompPart1
 
 		# To find z component
-		# Need components in y-z plane
-		#zCompPart1 = cos(self.yRot)	# x-z plane component
-		zCompPart2 = cos(self.xRot)	# y-z plane component
-		self.zLineOfSight =  zCompPart2  #+ zCompPart1 
+		zCompYaw =  sin(self.yRot) # (-z)-component of yaw
+		zCompPitch = cos(self.xRot) # (-z)-component of pitch 
+		zLineOfSight =  zCompYaw + zCompPitch
+
+		# Now normalize lineOfSightComponents to have unit vector for LOS vect
+		sqVectorLength = (xLineOfSight**2.0 + yLineOfSight**2.0 
+							+ zLineOfSight**2.0)
+		normXLineOfSight = xLineOfSight / sqVectorLength
+		normYLineOfSight = yLineOfSight / sqVectorLength
+		normZLineOfSight = zLineOfSight / sqVectorLength
+
+		# Save the normal components of unit line of sight vector
+		self.xLineOfSight = normXLineOfSight
+		self.yLineOfSight = normYLineOfSight
+		self.zLineOfSight = normZLineOfSight
+
 
 	def calculateGluReferencePoint(self):
 		# Find a point that is always ahead of camera
@@ -246,7 +265,6 @@ class OculusCamera(Camera):
 		# Center the frustrum of the right eye some distance away
 		# from center of camera (imaginary camera on mid of nose)
 		glTranslatef(- OculusCamera.noseToPupilDistance, 0.0, 0.0)
-		#glTranslatef(0.0, 0.0, 0.0)
 
 	def applyLeftEye(self):	
 		(width, height) = (self.worldData.width, self.worldData.height)
@@ -277,7 +295,6 @@ class OculusCamera(Camera):
 		# Center the frustrum of the left eye some distance away
 		# from center of camera (imaginary camera on mid of nose)
 		glTranslatef(+ OculusCamera.noseToPupilDistance, 0.0, 0.0)
-		#glTranslatef(0.0, 0.0, 0.0)
 
 	def updateOrientationRoutine(self):
 		# (Yaw, pitch, roll) == (yRot, xRot, zRot)
@@ -295,8 +312,6 @@ class OculusCamera(Camera):
 
 		self.rotateWorld(xRotDegs, yRotDegs, zRotDegs)
 
-
-
 	def rotateWorld(self, newXRot, newYRot, newZRot):
 		# Calculate dThetaX, dThetaY, dThetaZ
 		dThetaX = newXRot - self.xRot 
@@ -307,10 +322,6 @@ class OculusCamera(Camera):
 		self.rotateX(dThetaX)
 		self.rotateY(dThetaY)
 		self.rotateZ(dThetaZ)
-
-
-
-
 
 
 class Animation(object):
@@ -356,7 +367,7 @@ class Animation(object):
 
 		# Draw the scene to the left eye
 		glColor3f(0.0,178/255.0,200/255.0)
-		glutWireTeapot(1.25) # Draw wire cube
+		glutWireTeapot(25.0) # Draw wire cube
 		
 		glPopMatrix()
 
@@ -368,7 +379,7 @@ class Animation(object):
 
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
-		glutWireTeapot(1.25) # Draw wire cube
+		glutWireTeapot(25.0) # Draw wire cube
 		glPopMatrix()
 
 		glutSwapBuffers()
@@ -402,6 +413,8 @@ class Animation(object):
 	def specialKeyEvent(self, eventArgs):	# Handle arrow keys events
 		keysym = eventArgs[0]
 		# Handle arrow key events
+		if (self.oculus != None):
+			self.oculus.updateOrientationRoutine()
 		if (keysym == GLUT_KEY_LEFT):
 			self.oculus.move("LEFT")	# Strafe left
 		elif (keysym == GLUT_KEY_RIGHT):
@@ -424,7 +437,7 @@ class Animation(object):
 		"""
 
 		print "Mouse moved!:", mouseXPos, mouseYPos
-		self.mouse.changeCameraAngle(self.oculus, mouseXPos, mouseYPos)
+		self.mouse.changeCameraAngle(self.camera, mouseXPos, mouseYPos)
 
 		self.redrawAll()
 
@@ -461,7 +474,7 @@ class Animation(object):
 		glutPassiveMotionFunc(lambda mouseX, mouseY: self.mouseMoved(
 																mouseX,mouseY))
 		# Fullscreen
-		glutFullScreen()
+		#glutFullScreen()
 
 		# mainloop
 		glutMainLoop()
