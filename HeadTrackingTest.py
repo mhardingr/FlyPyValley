@@ -222,16 +222,6 @@ class Camera(object):
 		self.zLineOfSight = normZLineOfSight
 
 
-	def calculateGluReferencePoint(self):
-		# Find a point that is always ahead of camera
-		# Basically, add position data to line of sight vector components
-		refPtX = self.xPos + self.xLineOfSight
-		refPtY = self.yPos + self.yLineOfSight
-		refPtZ = self.zPos + self.zLineOfSight
-
-		return (refPtX, refPtY, refPtZ)
-
-
 class OculusCamera(Camera):
 	# Stereo Camera implementation
 	degsPerRadian = 180.0 / pi
@@ -380,7 +370,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		#self.camera.cameraUpdateGLRoutine()
+		self.camera.cameraUpdateGLRoutine()
 
 		# Draw the scene to the left eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -392,7 +382,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		#self.camera.cameraUpdateGLRoutine()
+		self.camera.cameraUpdateGLRoutine()
 
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
