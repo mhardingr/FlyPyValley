@@ -39,11 +39,6 @@ class Mouse(object):
 		thetaXRot = deltaVertical / Mouse.verticalMoveSensitivity
 		thetaYRot = deltaHorizontal / Mouse.horizontalMoveSensitivity
 
-		"""# Save the new mouse coords
-		self.xPos = newXPos
-		self.yPos = newYPos
-		"""
-
 		camera.rotate(thetaXRot, thetaYRot)
 
 	def changeCameraPosition(self, camera ):
@@ -176,13 +171,6 @@ class Camera(object):
 		# Move the camera to its world coordinates (negative because moving
 		# the world in opposite direction)
 		glTranslatef(-self.xPos, -self.yPos, -self.zPos)
-
-		# # Set the camera
-		# gluLookAt(  self.xPos, self.yPos, self.zPos,
-		# 			refPtX, refPtY, refPtZ,		# Insert IPD stuff here
-		# 			0.0, 1.0, 0.0)
-
-
 
 	def updateLineOfSightVectors(self):
 		if (type(self) == OculusCamera):
