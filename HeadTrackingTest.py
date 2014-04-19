@@ -137,16 +137,17 @@ class Camera(object):
 		# Move along the line of sight vector
 		# Add line of sight vector to position vector
 		speed = self.motionSpeed
-		"""dX = speed * self.xLineOfSight
+		speed = 1.0
+		dX = speed * self.xLineOfSight
 		dY = speed * self.yLineOfSight
 		dZ = speed * self.zLineOfSight
 
 		self.xPos += dX
 		self.yPos += dY
-		self.zPos += dZ"""
-
-		dZ = -(speed)
 		self.zPos += dZ
+
+		"""dZ = -(speed)
+		self.zPos += dZ"""
 
 	def moveBackward(self):
 		# Move in the positive z direction
@@ -363,7 +364,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		#self.camera.cameraUpdateGLRoutine()
+		self.camera.cameraUpdateGLRoutine()
 
 		# Draw the scene to the left eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -375,7 +376,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		#self.camera.cameraUpdateGLRoutine()
+		self.camera.cameraUpdateGLRoutine()
 
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -416,13 +417,13 @@ class Animation(object):
 		if (self.oculus != None):
 			self.oculus.updateOrientationRoutine()
 		if (keysym == GLUT_KEY_LEFT):
-			self.oculus.move("LEFT")	# Strafe left
+			self.camera.move("LEFT")	# Strafe left
 		elif (keysym == GLUT_KEY_RIGHT):
-			self.oculus.move("RIGHT")	# Strafe right
+			self.camera.move("RIGHT")	# Strafe right
 		elif (keysym == GLUT_KEY_DOWN):
-			self.oculus.move("BACK")	# Move backwards
+			self.camera.move("BACK")	# Move backwards
 		elif (keysym == GLUT_KEY_UP):
-			self.oculus.move("FWD")		# Move forwards
+			self.camera.move("FWD")		# Move forwards
 
 	def mouseMoved(self, mouseXPos, mouseYPos):
 		"""
