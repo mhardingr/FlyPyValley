@@ -67,7 +67,7 @@ class Camera(object):
 		self.yLineOfSight = 1.0 / (3**2)
 		self.zLineOfSight = 1.0 / (3**2)
 
-		self.motionSpeed = 1 # world units per frame
+		self.motionSpeed = 0.5 # world units per frame
 
 	def setRotationXYZ(self, xRot, yRot, zRot):
 		self.xRot = xRot
@@ -136,11 +136,17 @@ class Camera(object):
 	def moveForward(self):
 		# Move along the line of sight vector
 		# Add line of sight vector to position vector
+
+		print "Current line of sight vector: <%5f,%5f, %5f>" % (self.xLineOfSight, self.yLineOfSight, self.zLineOfSight)
 		speed = self.motionSpeed
-		speed = 1.0
+		#speed = 1.0
 		dX = speed * self.xLineOfSight
 		dY = speed * self.yLineOfSight
 		dZ = speed * self.zLineOfSight
+
+		#dX = 0
+		#dY = 0
+		#dZ = 0
 
 		self.xPos += dX
 		self.yPos += dY
@@ -148,7 +154,6 @@ class Camera(object):
 
 		"""dZ = -(speed)
 		self.zPos += dZ"""
-
 	def moveBackward(self):
 		# Move in the positive z direction
 		speed = self.motionSpeed
@@ -180,25 +185,35 @@ class Camera(object):
 
 
 	def updateLineOfSightVectors(self):
+		if (type(self) == OculusCamera):
+
+			print "Updating line of sight vector!: (%3f, %3f,%3f)" % (self.xRot, self.yRot, self.zRot)
+
+		# Convert rotational orientation data into radians
+		xRotRads = self.xRot / Camera.degsPerRadian
+		yRotRads = self.yRot / Camera.degsPerRadian
+		zRotRads = self.zRot / Camera.degsPerRadian
+
 		# To find x component: 
-		xCompYaw = cos (self.yRot)	# find x-Component of yaw
+		xCompYaw = sin (yRotRads)	# find x-Component of yaw
 		xLineOfSight = xCompYaw
 
 		# To find y component:
-		yCompPitch = sin (self.xRot) # y component of pitch
-		yLineOfSight = yCompPitch #+ yCompPart1
+		yCompPitch = sin (-xRotRads) # y component of pitch
+		yLineOfSight = yCompPitch 
 
 		# To find z component
-		zCompYaw =  sin(self.yRot) # (-z)-component of yaw
-		zCompPitch = cos(self.xRot) # (-z)-component of pitch 
-		zLineOfSight =  zCompYaw + zCompPitch
+		zCompYaw = -cos(yRotRads) # z-component of yaw
+		zCompPitch = -cos(-xRotRads) # z-component of pitch 
+		zLineOfSight =  zCompPitch +  zCompYaw 
 
 		# Now normalize lineOfSightComponents to have unit vector for LOS vect
 		sqVectorLength = (xLineOfSight**2.0 + yLineOfSight**2.0 
 							+ zLineOfSight**2.0)
-		normXLineOfSight = xLineOfSight / sqVectorLength
-		normYLineOfSight = yLineOfSight / sqVectorLength
-		normZLineOfSight = zLineOfSight / sqVectorLength
+		sqRootVecLength = sqVectorLength ** 0.5
+		normXLineOfSight = xLineOfSight / sqRootVecLength
+		normYLineOfSight = yLineOfSight / sqRootVecLength
+		normZLineOfSight = zLineOfSight / sqRootVecLength
 
 		# Save the normal components of unit line of sight vector
 		self.xLineOfSight = normXLineOfSight
@@ -364,7 +379,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		self.camera.cameraUpdateGLRoutine()
+		#self.camera.cameraUpdateGLRoutine()
 
 		# Draw the scene to the left eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -376,7 +391,7 @@ class Animation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		self.camera.cameraUpdateGLRoutine()
+		#self.camera.cameraUpdateGLRoutine()
 
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
@@ -417,13 +432,13 @@ class Animation(object):
 		if (self.oculus != None):
 			self.oculus.updateOrientationRoutine()
 		if (keysym == GLUT_KEY_LEFT):
-			self.camera.move("LEFT")	# Strafe left
+			self.oculus.move("LEFT")	# Strafe left
 		elif (keysym == GLUT_KEY_RIGHT):
-			self.camera.move("RIGHT")	# Strafe right
+			self.oculus.move("RIGHT")	# Strafe right
 		elif (keysym == GLUT_KEY_DOWN):
-			self.camera.move("BACK")	# Move backwards
+			self.oculus.move("BACK")	# Move backwards
 		elif (keysym == GLUT_KEY_UP):
-			self.camera.move("FWD")		# Move forwards
+			self.oculus.move("FWD")		# Move forwards
 
 	def mouseMoved(self, mouseXPos, mouseYPos):
 		"""
