@@ -19,8 +19,8 @@ from math import *
 #import NeheHeightmap	# Use terrain generate by tutorial file
 
 class Mouse(object):
-	horizontalMoveSensitivity = 200 # Delta mousePosX / degrees of xRotation
-	verticalMoveSensitivity = 200 # Delta mousePosY / degrees of yRotation
+	horizontalMoveSensitivity = 400 # Delta mousePosX / degrees of xRotation
+	verticalMoveSensitivity = 400 # Delta mousePosY / degrees of yRotation
 	def __init__(self, xPos, yPos):
 		self.xPos = xPos
 		self.yPos = yPos
@@ -461,7 +461,7 @@ class Animation(object):
 		glutKeyboardFunc(lambda *eventArgs: self.normalKeyEvent(eventArgs))
 		# To handle arrow keys:
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
-		glutPassiveMotionFunc(lambda mouseX, mouseY: self.mouseMoved(
+		glutMotionFunc(lambda mouseX, mouseY: self.mouseMoved(
 																mouseX,mouseY))
 		# Fullscreen
 		glutFullScreen()
