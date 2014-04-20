@@ -500,7 +500,6 @@ class Animation(object):
 		self.timerDelay = 10 # 10 millis, want as many fps as possible
 
 		(self.middleX, self.middleY) = (self.width / 2, self.height / 2)
-		self.mouse = Mouse(self.middleX, self.middleY)
 
 
 	def main(self):

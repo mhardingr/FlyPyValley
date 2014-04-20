@@ -8,6 +8,8 @@ from math import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from Camera import *
+import pyrift
 
 
 class OculusCamera(Camera):
