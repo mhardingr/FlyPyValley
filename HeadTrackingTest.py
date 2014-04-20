@@ -55,6 +55,12 @@ class Camera(object):
 		self.yRot = yRot
 		self.zRot = zRot
 
+		# Initialize "orientation" offsets (offset angles added using arrow 
+		# keys)
+		self.orientatingXRotOffset = 0.0
+		self.orientatingYRotOffset = 0.0
+		self.orientatingZRotOffset = 0.0
+
 		# Line of sight vector components: initial values
 		self.xLineOfSight = 1.0 /(3**2)
 		self.yLineOfSight = 1.0 / (3**2)
@@ -114,10 +120,36 @@ class Camera(object):
 			self.moveBackward()
 
 	def turnLeft(self):
-		# To turn left, add 
-		speed = self.motionSpeed
-		dX = -(speed) 
-		self.xPos += dX
+		# To turn "left" theta degrees from current line of sight
+		dTheta = -5.0 # degrees
+		dThetaRads = dTheta / Camera.degsPerRadian
+		xRotRads = self.xRot / Camera.degsPerRadian
+		yRotRads = self.yRot / Camera.degsPerRadian
+
+		# Must find xRotComponent and yRotComponent rotations for left turn
+		# First calculate x and y components of new vector (vector P):
+		# P = lineOfSightVector * cos(dthetaRads)
+		
+		# Need to use cosine and sine product trigonmetric identities
+		xCompOfNewLOSVector = 1 / 2.0 * (cos(yRotRads - dThetaRads) + 
+											cos(yRotRads+dThetaRads))
+		newYRotInRads = acos (xCompOfNewLOSVector)
+
+		yCompOfNewLOSVector = 1 / 2.0 * (sin(-xRotRads - dThetaRads) +
+											sin(-xRotRads+dThetaRads))
+		newXRotInRads = - asin(yCompOfNewLOSVector)
+
+		# Save actual values of xRotOffset and yRotOffset
+		actualXRotOffset = newXRotInRads - xRotRads
+		actualYRotOffset = newYRotInRads - yRotRads
+
+		self.orientatingXRotOffset += actualXRotOffset * Camera.degsPerRadian
+		self.orientatingYRotOffset += actualYRotOffset * Camera.degsPerRadian
+
+		self.xRot = newXRotInRads / Camera.degsPerRadian
+		self.yRot = newYRotInRads / Camera.degsPerRadian
+
+
 
 	def turnRight(self):
 		# Move in the positive X direction
@@ -128,8 +160,6 @@ class Camera(object):
 	def moveForward(self):
 		# Move along the line of sight vector
 		# Add line of sight vector to position vector
-
-		print "Current line of sight vector: <%5f,%5f, %5f>" % (self.xLineOfSight, self.yLineOfSight, self.zLineOfSight)
 		speed = self.motionSpeed
 		#speed = 1.0
 		dX = speed * self.xLineOfSight
@@ -302,12 +332,18 @@ class OculusCamera(Camera):
 		self.rotateWorld(xRotDegs, yRotDegs, zRotDegs)
 
 	def rotateWorld(self, newXRot, newYRot, newZRot):
-		"""orientatingXRotOffset = self.orientatingXRotOffset
+		orientatingXRotOffset = self.orientatingXRotOffset
 		orientatingYRotOffset = self.orientatingYRotOffset
-		orientatingZRotOffset = self.orientatingZRotOffset"""
+		orientatingZRotOffset = self.orientatingZRotOffset
 
 		# Update camera data using Camera class methods
 		self.setRotationXYZ(newXRot, newYRot, newZRot)
+
+		# Then rotate the scene even more by adding the orientat. angle 
+		# offsets. (Use Camera methods in order to control outputed angles)
+		self.rotateX(orientatingXRotOffset)
+		self.rotateY(orientatingYRotOffset)
+		self.rotateZ(orientatingZRotOffset)
 
 
 class Animation(object):
