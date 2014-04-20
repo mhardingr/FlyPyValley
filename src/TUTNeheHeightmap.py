@@ -322,7 +322,7 @@ def InitGL(Width, Height):				# We call this right after our OpenGL window is cr
 	# // TUTORIAL
 	# // Load The Mesh Data
 	g_pMesh = CMesh ()
-	if (not g_pMesh.LoadHeightmap ("Terrain.bmp",
+	if (not g_pMesh.LoadHeightmap ("../rsc/Terrain.bmp",
 		CMesh.MESH_HEIGHTSCALE, CMesh.MESH_RESOLUTION)):
 		#print "Error Loading Heightmap"
 		sys.exit(1)
@@ -380,6 +380,7 @@ def ReSizeGLScene(Width, Height):
 g_prev_draw_time = 0.0
 # The main drawing function. 
 def DrawGLScene():
+	print "Entered redrawall!"
 	global g_dwLastFPS, g_nFPS, g_nFrames, g_pMesh, g_fVBOSupported, g_flYRot, g_prev_draw_time
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);				# // Clear Screen And Depth Buffer
@@ -442,9 +443,10 @@ def DrawGLScene():
 		glVertexPointer( 3, GL_FLOAT, 0, g_pMesh.m_pVertices_as_string);  	# // Set The Vertex Pointer To Our Vertex Data
 		glTexCoordPointer( 2, GL_FLOAT, 0, g_pMesh.m_pTexCoords_as_string); 	# // Set The Vertex Pointer To Our TexCoord Data
 
-
+	print "About to print arrays!"
 	# // Render
 	glDrawArrays( GL_TRIANGLES, 0, g_pMesh.m_nVertexCount );		# // Draw All Of The Triangles At Once
+	print "Printed arrays!"
 
 	# // Disable Pointers
 	glDisableClientState( GL_VERTEX_ARRAY );					# // Disable Vertex Arrays
@@ -470,6 +472,7 @@ def keyPressed(*args):
 	return
 
 def main():
+	print "In GD main!"
 	global window
 	# pass arguments to init
 	glutInit(sys.argv)
@@ -521,6 +524,7 @@ def main():
 	# consturct the displays lists for the bitmap font.
 	InitGL(640, 480)
 
+	print "Entering glut glutMainLoop"
 	# Start Event Processing Engine	
 	glutMainLoop()
 

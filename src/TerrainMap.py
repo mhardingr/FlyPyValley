@@ -17,22 +17,20 @@ import time
 
 class Vertex:
 	def __init__(self, x=0.0, y=0.0, z=0.0):
-		self.data = Struct()
-		self.data.x= x
-		self.data.y = y
-		self.data.z = z
+		self.x= x
+		self.y = y
+		self.z = z
 
 	def getVertData(self):
-		return (self.data.x,self.data.y,self.data.z)
+		return (self.x,self.y,self.z)
 
 class TextureCoordinates:
 	def __init__ (self, u=0.0, v=0.0):
-		self.data = Struct()
-		self.data.u = u
-		self.data.v = v
+		self.u = u
+		self.v = v
 
 	def getTextureCoordsData():
-		return (self.data.u,self.data.v)
+		return (self.u,self.v)
 
 class TerrainMesh:
 	# Constants:
@@ -72,8 +70,16 @@ class TerrainMesh:
 		# Create vertList (3D points) and textureCoords (2D coords)
 		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
 		# Use tuple input to describe size and dims of array
-		(vertexPointDims, texPointDims) = (3,2)
-		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f')
+		(vertexPointDims, texPointDims) = (1,2)
+		initHeight = 0.0
+
+		# CLARIFY: Making a 2d list of height values, where xcoord == row
+		# and zcoord == col
+		# Iterating over the x-z plane of the given heightmap
+		# Number of xCoords:
+		numXCoords = lengthX / mapResolution * numPixelsPerVertex ** 0.58   # !
+		numZCoords = widthY / mapResolution * numPixelsPerVertex ** 0.58 	# !
+		self.vertList = [ [initHeight] * lengthX for zPixel in xrange(widthY) ] 
 		self.textureCoords= npy.zeros( (numVertices, texPointDims), 'f')
 
 
@@ -104,12 +110,15 @@ class TerrainMesh:
 												* heightScale)
 					z = fTerrPosZ - halfWidthY
 
-					self.vertList [vertIndex] = (x,y,z)
+					self.vertList [terrPosX][terrPosZ] = y
 					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 															(fTerrPosZ/widthY))
 					vertIndex += 1
 					textIndex += 1
-		self.vertListAsString = self.vertList.tostring () # Use numpy method
+
+		# Now convert self.vertList to numpy array for easier toString conversion			
+		npVertList = npy.array(self.vertList, 'f')
+		self.vertListAsString = npVertList.tostring () # Use numpy method
 		self.textureCoordsAsString = self.textureCoords.tostring ()
 
 		print self.vertListAsString
@@ -159,133 +168,164 @@ class TerrainMesh:
 		greenLuminance = 0.587
 		blueLuminance = 0.114
 
-		print (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
 		return (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
 
 class Struct : pass
 
-def keyPressed(data):
-	pass
+class TerrainMapAnimation(object):
+	def keyPressed(self):
+		pass
 
-def reshapeWindow(data, width, height):
-	if (height == 0): height = 1
+	def reshapeWindow(self, width, height):
+		if (height == 0): height = 1
 
-	glViewport(0, 0, width, height) # Reset the curr. viewprt. and persp.transf.
-	glMatrixMode(GL_PROJECTION)
-	glLoadIdentity()
+		glViewport(0, 0, width, height) # Reset the curr. viewprt. and persp.transf.
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
 
-	fieldOfView = 45.0
-	aspectRatio = float(width) / height
-	near = 1
-	far = 1000.0
-	# In order to squash and stretch our objects as resize requires
-	gluPerspective(fieldOfView, aspectRatio, near, far)
+		fieldOfView = 45.0
+		aspectRatio = float(width) / height
+		near = 1
+		far = 1000.0
+		# In order to squash and stretch our objects as resize requires
+		gluPerspective(fieldOfView, aspectRatio, near, far)
 
-	glMatrixMode(GL_MODELVIEW)
-	glLoadIdentity()
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
 
-def redrawAll(data):
-	# Can do fps here ... (no GLOBALS)
-	millis = time.clock() * 1000.0
-	if (millis - data.prevFPSCheck >= 1000.0):	# one second has passed
-		data.prevFPSCheck = time.clock() * 1000.0
-		data.numFPS = data.numFrames
-		data.numFrames = 0
+	def redrawAll(self):
+		# Can do fps here ... (no GLOBALS)
+		print "Entered redrawAll!"
+		millis = time.clock() * 1000.0
+		if (millis - self.prevFPSCheck >= 1000.0):	# one second has passed
+			self.prevFPSCheck = time.clock() * 1000.0
+			self.numFPS = self.numFrames
+			self.numFrames = 0
 
-		#print data.numFPS
+			#print self.numFPS
 
-	data.numFrames += 1 					# Increment FPS counter
-	dRotation = (millis - data.prevTimeDraw) / 1000.0 * 10
-	data.prevTimeDraw = millis
-	data.flyRot += dRotation
+		self.numFrames += 1 					# Increment FPS counter
+		dRotation = (millis - self.prevTimeDraw) / 1000.0 * 10
+		self.prevTimeDraw = millis
+		self.flyRot += dRotation
 
-	# Clear screen and depth 
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) 
-	glLoadIdentity()		# Rest the modelview matrix
+		# Clear screen and depth 
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) 
+		glLoadIdentity()		# Rest the modelview matrix
 
-	# Move the camera
-	(camX, camY, camZ)= (0.0, -220.0, 0.0)
-	glTranslatef( camX, camY, camZ)	# Make sure above terrain
+		# Move the camera
+		(camX, camY, camZ)= (0.0, -220.0, 0.0)
+		glTranslatef( camX, camY, camZ)	# Make sure above terrain
 
-	glRotatef( 10.0, 1.0, 0.0, 0.0) # look down slightly
-	glRotatef( data.flyRot, 0.0, 1.0, 0.0)
+		glRotatef( 10.0, 1.0, 0.0, 0.0) # look down slightly
+		glRotatef( self.flyRot, 0.0, 1.0, 0.0)
 
-	# Enable pointers!
-	glEnableClientState( GL_VERTEX_ARRAY)			# Enable vertex arrays
-	glEnableClientState( GL_TEXTURE_COORD_ARRAY)	# Enable tex. coord arrays
+		# Enable pointers!
+		glEnableClientState( GL_VERTEX_ARRAY)			# Enable vertex arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY)	# Enable tex. coord arrays
 
+		print "Pointers enabled!"
 
-	# Using strings way of pointing to arrays!
-	glVertexPointer( 3, GL_FLOAT, 0, data.terrainMesh.vertListAsString)
-	glTexCoordPointer( 2, GL_FLOAT, 0, data.terrainMesh.textureCoordsAsString)
+		# Using strings way of pointing to arrays!
+		glVertexPointer( 3, GL_FLOAT, 0, self.terrainMesh.vertListAsString)
+		glTexCoordPointer( 2, GL_FLOAT, 0, self.terrainMesh.textureCoordsAsString)
 
-	# Render landscape
-	glDrawArrays( GL_TRIANGLE_FAN, 0, data.terrainMesh.numVertices)
+		print "Vertices pointed to!"
+		# Render landscape
+		#self.renderLandscape()
+		glDrawArrays( GL_TRIANGLES, 0, self.terrainMesh.numVertices)
+		print "Array drawn!"
+		# Disable Vertex arrays, disable texture coord arrays
+		glDisableClientState( GL_VERTEX_ARRAY)		
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY) 
 
-	# Disable Vertex arrays, disable texture coord arrays
-	glDisableClientState( GL_VERTEX_ARRAY)		
-	glDisableClientState( GL_TEXTURE_COORD_ARRAY) 
-
-	glutSwapBuffers()
-
-def renderObjects(data):
-	# Now do rendering: Draw all triangles at once!
-	pass
-
-def initGL (data, width, height):
-	# Load the mesh data
-	data.terrainMesh = TerrainMesh()
-	if (data.terrainMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
-		#print "Error loading heightmap!"
-		sys.exit(1)
-
-	# Setup GL states
-	glClearColor (0.0, 0.0, 0.0, 0.5) 		#Black background
-	glClearDepth( 1.0)
-	glDepthFunc(GL_LEQUAL)					# Type of Depth testing
-	glEnable(GL_DEPTH_TEST)					# Enable depth testing
-	glShadeModel(GL_SMOOTH)					# Select smooth shading
-	# Most precise perspective calculations
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)  
-	glEnable(GL_TEXTURE_2D)					# Enable texturing'
-	#glEnable(GL_CULL_FACE)
-	#glCullFace(GL_BACK)
-
-	glColor4f (1.0, 6.0, 6.0, 1.0)			# Set coloring color (?)
+		print "Done drawing!"
+		glutSwapBuffers()
 
 
-def initGLUT (data, width, height):
-	glutInit()
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
-	glutInitWindowPosition (100, 100)
-	glutInitWindowSize(width, height)
-	glutCreateWindow("TerrainMap.py!")
+	# Code for rendering landscape adapted from:
+	# https://github.com/soumitrasaxena/TerrainGenerationOpenGL/
+	# blob/master/Terrain.cpp
+	def renderLandscape(self):
+		# Drawing using primitive drawing gl functions and GL_TRIANGLE_STRIP
+		# for proper terrain rendering
+		numXCoords = len(self.terrainMesh.vertList)
+		numZCoords = len(self.terrainMesh.vertList[0])
+		glColor3f(1.0, 1.0, 1.0)
+		print "Starting to draw:"
+		for zPos in xrange(numZCoords - 1):
 
-	#glutFullScreen()
+			glBegin(GL_TRIANGLE_STRIP)
+			for xPos in xrange(numXCoords):
+				yPos = self.terrainMesh.vertList [xPos][zPos]
+				glVertex3f(xPos, yPos, zPos)
 
-	# Callbacks / bindings
-	glutDisplayFunc( lambda : redrawAll(data))
-	glutIdleFunc(lambda: redrawAll(data))
-	glutReshapeFunc(lambda width, height: reshapeWindow(data,width,height))
-	glutKeyboardFunc(lambda : keyPressed(data))
-	glutSpecialFunc(lambda : keyPressed(data)) #For directional keys
+				nextZPos = zPos + 1
+				nextYPos = self.terrainMesh.vertList [xPos][nextZPos]
+				glVertex3f(xPos, nextYPos, nextZPos)
+			glEnd()
 
-def animationLoop(data, width, height):
-	initGLUT(data, width, height)
-	initGL(data, width, height)
-	
-	# Enter glut mainloop
-	#print "Entering glutMainLoop"
-	glutMainLoop()
+	def renderObjects(self):
+		# Now do rendering: Draw all triangles at once!
+		pass
 
-def runTerrain():
-	data = Struct()
-	data.flyRot = 0.0
-	data.numFPS = 0
-	data.numFrames = 0
-	data.prevFPSCheck = 0.0
-	data.prevTimeDraw = 0.0
-	data.terrainMesh = None
-	animationLoop(data, width= 600, height = 480)
+	def initGL (self, width, height):
+		# Load the mesh data
+		self.terrainMesh = TerrainMesh()
+		if (self.terrainMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
+			#print "Error loading heightmap!"
+			sys.exit(1)
 
-runTerrain()
+		# Setup GL states
+		glClearColor (0.0, 0.0, 0.0, 0.5) 		#Black background
+		glClearDepth( 1.0)
+		glDepthFunc(GL_LEQUAL)					# Type of Depth testing
+		glEnable(GL_DEPTH_TEST)					# Enable depth testing
+		glShadeModel(GL_SMOOTH)					# Select smooth shading
+		# Most precise perspective calculations
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)  
+		glEnable(GL_TEXTURE_2D)					# Enable texturing'
+		#glEnable(GL_CULL_FACE)
+		#glCullFace(GL_BACK)
+
+		glColor4f (1.0, 6.0, 6.0, 1.0)			# Set coloring color (?)
+
+
+	def initGLUT (self, width, height):
+		glutInit()
+		glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
+		glutInitWindowPosition (100, 100)
+		glutInitWindowSize(width, height)
+		glutCreateWindow("TerrainMap.py!")
+
+		#glutFullScreen()
+
+		# Callbacks / bindings
+		glutDisplayFunc( lambda : self.redrawAll())
+		glutIdleFunc(lambda: self.redrawAll())
+		glutReshapeFunc(lambda width, height: self.reshapeWindow(width,height))
+		glutKeyboardFunc(lambda event: self.keyPressed(event))
+		glutSpecialFunc(lambda event: self.keyPressed(event)) #For directional keys
+
+	def animationLoop(self, width, height):
+		print "Entered animationLoop!"
+		self.initGLUT(width, height)
+		self.initGL(width, height)
+		
+		# Enter glut mainloop
+		print "Entering main loop!"
+		glutMainLoop()
+
+	def runTerrain(self):
+		self.flyRot = 0.0
+		self.numFPS = 0
+		self.numFrames = 0
+		self.prevFPSCheck = 0.0
+		self.prevTimeDraw = 0.0
+		self.terrainMesh = None
+		self.winWidth = 600
+		self.winHeight = 480
+		self.animationLoop(width= self.winWidth, height = self.winHeight)
+
+myAnimation = TerrainMapAnimation()
+myAnimation.runTerrain()
