@@ -121,7 +121,7 @@ class Camera(object):
 
 	def turnLeft(self):
 		# To turn "left" theta degrees from current line of sight
-		dTheta = -5.0 # degrees
+		dTheta = -2.0 # degrees
 		dThetaRads = dTheta / Camera.degsPerRadian
 		xRotRads = self.xRot / Camera.degsPerRadian
 		yRotRads = self.yRot / Camera.degsPerRadian
@@ -143,19 +143,26 @@ class Camera(object):
 		actualXRotOffset = newXRotInRads - xRotRads
 		actualYRotOffset = newYRotInRads - yRotRads
 
-		self.orientatingXRotOffset += actualXRotOffset * Camera.degsPerRadian
-		self.orientatingYRotOffset += actualYRotOffset * Camera.degsPerRadian
+		#self.orientatingXRotOffset += actualXRotOffset * Camera.degsPerRadian
+		#self.orientatingYRotOffset += actualYRotOffset * Camera.degsPerRadian
+		self.orientatingYRotOffset += dTheta
 
-		self.xRot = newXRotInRads / Camera.degsPerRadian
+
+		#self.xRot = newXRotInRads / Camera.degsPerRadian
 		self.yRot = newYRotInRads / Camera.degsPerRadian
+
+		#"""
+		self.yRot += dTheta
 
 
 
 	def turnRight(self):
-		# Move in the positive X direction
-		speed = self.motionSpeed
-		dX = +(speed)
-		self.xPos += dX
+		# To turn "right" theta degrees from the current line of sight vector
+		dTheta = +2.0 # degrees
+		self.orientatingYRotOffset += dTheta
+
+		self.yRot += dTheta
+
 
 	def moveForward(self):
 		# Move along the line of sight vector
@@ -430,8 +437,6 @@ class Animation(object):
 			self.camera.setRotationXYZ(0.0,0.0,0.0)
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
-		print "normal Key event handled!"
-
 	def specialKeyEvent(self, eventArgs):	# Handle arrow keys events
 		keysym = eventArgs[0]
 		# Handle arrow key events
@@ -488,6 +493,8 @@ class Animation(object):
 		self.isWarpingPointer = False
 		self.camera = Camera()
 		self.oculus = OculusCamera(self)
+		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
+								"RIGHT":False}
 
 		(self.middleX, self.middleY) = (self.width / 2, self.height / 2)
 		self.mouse = Mouse(self.middleX, self.middleY)
