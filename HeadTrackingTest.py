@@ -240,7 +240,7 @@ class Camera(object):
 class OculusCamera(Camera):
 	# Stereo Camera implementation
 	degsPerRadian = 180.0 / pi
-	noseToPupilDistance = 0.047	# Empirical data, in world units
+	noseToPupilDistance = 2.3723	# Empirical data, in world units
 	def __init__(self, world):
 		super(OculusCamera, self).__init__()
 		
@@ -323,9 +323,9 @@ class OculusCamera(Camera):
 		(yRotRads, xRotRads, zRotRads) = pyrift.get_orientation()
 		#print (xRotRads, yRotRads, zRotRads)
 
-		# Empirical tests show that reducing roll by 90% creates a more
+		# Empirical tests show that reducing roll by 95% creates a more
 		# realistic world tilt
-		rollReduceFactor = 0.1
+		rollReduceFactor = 0.03
 		
 		# Convert rotation data to degrees for Opengl functions
 		xRotDegs = -xRotRads * OculusCamera.degsPerRadian
@@ -443,6 +443,13 @@ class Animation(object):
 			self.camera.setRotationXYZ(0.0,0.0,0.0)
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
+		elif (keysym == "+"):
+			OculusCamera.noseToPupilDistance +=0.025
+			print OculusCamera.noseToPupilDistance
+		elif (keysym == "-"):
+			OculusCamera.noseToPupilDistance -= .025
+			print OculusCamera.noseToPupilDistance
+
 	def keyUpEventHandler(self, eventArgs):	# Handles the release of arrow key
 		print "Key released!"
 		keysym = eventArgs[0]
@@ -516,7 +523,7 @@ class Animation(object):
 		self.oculus = OculusCamera(self)
 		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
 								"RIGHT":False}
-		self.timerDelay = 25 # milliseconds
+		self.timerDelay = 10 # 10 millis, want as many fps as possible
 
 		(self.middleX, self.middleY) = (self.width / 2, self.height / 2)
 		self.mouse = Mouse(self.middleX, self.middleY)
