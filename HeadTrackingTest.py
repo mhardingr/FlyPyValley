@@ -5,7 +5,7 @@
 # where camera looks
 
 
-# Adapted from: 
+# FPS controls inspired by: 
 # http://r3dux.org/2011/05/simple-opengl-keyboard-and-mouse-fps-controls/
 
 from OpenGL.GL import *
@@ -14,33 +14,7 @@ from OpenGL.GLUT import *
 
 import sys
 import pyrift	# Python wrapper for OculusSDK
-import numpy as np
 from math import *
-#import NeheHeightmap	# Use terrain generate by tutorial file
-
-class Mouse(object):
-	horizontalMoveSensitivity = 400 # Delta mousePosX / degrees of xRotation
-	verticalMoveSensitivity = 400 # Delta mousePosY / degrees of yRotation
-	def __init__(self, xPos, yPos):
-		self.xPos = xPos
-		self.yPos = yPos
-
-	def getMouseData(self):
-		return (self.xPos, self.yPos)
-
-	def setMouseData(self, newXPos, newYPos):
-		self.xPos = newXPos
-		self.yPos = newYPos
-
-	def changeCameraAngle(self, camera, newXPos, newYPos):
-		deltaHorizontal = newXPos - self.xPos
-		deltaVertical = newYPos - self.yPos
-
-		thetaXRot = deltaVertical / Mouse.verticalMoveSensitivity	#Pitch
-		thetaYRot = deltaHorizontal / Mouse.horizontalMoveSensitivity	# Yaw
-
-		camera.rotate2D(thetaXRot, thetaYRot)
-
 
 class Camera(object):
 
