@@ -204,10 +204,6 @@ class Camera(object):
 		glTranslatef(-self.xPos, -self.yPos, -self.zPos)
 
 	def updateLineOfSightVectors(self):
-		if (type(self) == OculusCamera):
-
-			print "Updating line of sight vector!: (%3f, %3f,%3f)" % (self.xRot, self.yRot, self.zRot)
-
 		# Convert rotational orientation data into radians
 		xRotRads = self.xRot / Camera.degsPerRadian
 		yRotRads = self.yRot / Camera.degsPerRadian
@@ -354,6 +350,27 @@ class OculusCamera(Camera):
 
 
 class Animation(object):
+
+	def animationTimer(self):
+		print "Entered timerfired!"
+		# Update orientation of Oculus!
+		self.oculus.updateOrientationRoutine()
+
+		# Handle motion smoothly
+		if (self.keyStates["UP"] == True):
+			self.oculus.move("FWD") # Move forward if UP key pressed
+		elif (self.keyStates["DOWN"] == True):
+			self.oculus.move("BACK") # Or move backwards
+		if (self.keyStates["LEFT"] == True):
+			self.oculus.move("LEFT") # Turn to the left if LEFT key pressed
+		elif (self.keyStates["RIGHT"] == True):
+			self.oculus.move("RIGHT") # Or turn to the right 
+
+
+		self.redrawAll()
+		glutTimerFunc(self.timerDelay, 
+						lambda garbage: self.animationTimer(), None)
+
 	def redrawAll(self):
 
 		self.practiceRender()
@@ -413,17 +430,6 @@ class Animation(object):
 
 		glutSwapBuffers()
 
-	def drawTerrain(self):
-
-		glLoadIdentity()
-		glClearColor(1.0,1.0,1.0,1.0) #Background white
-		glColor3f(0.0,178/255.0,255/255.0)
-		glBegin(GL_TRIANGLES)
-		glVertex3f(-2,-2,-5.0)
-		glVertex3f(2,0.0,-5.0)
-		glVertex3f(0.0,2,-5.0)
-		glEnd()
-
 	def normalKeyEvent(self, eventArgs):	# Handle character events
 		escKeyAscii = 27
 		keysym = eventArgs[0]
@@ -437,19 +443,30 @@ class Animation(object):
 			self.camera.setRotationXYZ(0.0,0.0,0.0)
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
-	def specialKeyEvent(self, eventArgs):	# Handle arrow keys events
+	def keyUpEventHandler(self, eventArgs):	# Handles the release of arrow key
+		print "Key released!"
+		keysym = eventArgs[0]
+		if (keysym == GLUT_KEY_LEFT):
+			self.keyStates["LEFT"] = False
+		elif (keysym == GLUT_KEY_RIGHT):
+			self.keyStates["RIGHT"] = False
+		elif (keysym == GLUT_KEY_DOWN):
+			self.keyStates["DOWN"] = False
+		elif (keysym == GLUT_KEY_UP):
+			self.keyStates["UP"] = False
+
+
+	def specialKeyEvent(self, eventArgs):	# Handle arrow keys pressed events
 		keysym = eventArgs[0]
 		# Handle arrow key events
-		if (self.oculus != None):
-			self.oculus.updateOrientationRoutine()
 		if (keysym == GLUT_KEY_LEFT):
-			self.oculus.move("LEFT")	# Strafe left
+			self.keyStates["LEFT"] = True
 		elif (keysym == GLUT_KEY_RIGHT):
-			self.oculus.move("RIGHT")	# Strafe right
+			self.keyStates["RIGHT"] = True
 		elif (keysym == GLUT_KEY_DOWN):
-			self.oculus.move("BACK")	# Move backwards
+			self.keyStates["DOWN"] = True
 		elif (keysym == GLUT_KEY_UP):
-			self.oculus.move("FWD")		# Move forwards
+			self.keyStates["UP"] = True
 
 
 	def resizeWindow(self, width, height):
@@ -476,14 +493,18 @@ class Animation(object):
 		glutWarpPointer(self.middleX, self.middleY)
 
 		# Callbacks
-		glutDisplayFunc(lambda : self.redrawAll())	# RedrawAll
+		glutDisplayFunc(lambda : self.redrawAll())	# RedrawAll function called
 		glutIdleFunc(lambda : self.redrawAll())
 		glutReshapeFunc(lambda width, height: self.resizeWindow(width, height))
 		glutKeyboardFunc(lambda *eventArgs: self.normalKeyEvent(eventArgs))
 		# To handle arrow keys:
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
+		glutSpecialUpFunc(lambda *event: self.keyUpEventHandler(event))
 		# Fullscreen
 		glutFullScreen()
+
+		# Call Timer function as with TKinter
+		self.animationTimer()
 
 		# mainloop
 		glutMainLoop()
@@ -495,9 +516,11 @@ class Animation(object):
 		self.oculus = OculusCamera(self)
 		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
 								"RIGHT":False}
+		self.timerDelay = 25 # milliseconds
 
 		(self.middleX, self.middleY) = (self.width / 2, self.height / 2)
 		self.mouse = Mouse(self.middleX, self.middleY)
+
 
 	def main(self):
 		(self.width, self.height) = (600, 480)
