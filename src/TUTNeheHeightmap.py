@@ -220,7 +220,8 @@ class CMesh:
 		pixel = self.m_pTextureImage.getpixel ((nY, nX))
 
 		# // Calculate The Height Using The Luminance Algorithm
-		return ( (0.299 * flR) + (0.587 * flG) + (0.114 * flB) );			
+		print ( (0.299 * flR) + (0.587 * flG) + (0.114 * flB) )
+		return 	( (0.299 * flR) + (0.587 * flG) + (0.114 * flB) )		
 
 
 	def BuildVBOs (self):

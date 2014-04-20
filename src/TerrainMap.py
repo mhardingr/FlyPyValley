@@ -1,6 +1,9 @@
 # TerrainMap.py
 
 # My implementation of drawing a 3-D terrain from a given height-map
+# Vertex Buffer Object Tutorial code from which this code was (largely) 
+# adapted:
+# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
 import Struct
 from OpenGL.GL import *
@@ -82,6 +85,10 @@ class TerrainMesh:
 		halfLengthX = lengthX / 2.0
 		mapResolutionInt = int (mapResolution)
 		numTrianglesPerUnitSquare = 6
+
+		# This algorithm is from the tutorial:
+		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
+
 		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
 			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
 				for triangle in xrange(numTrianglesPerUnitSquare):
@@ -152,7 +159,8 @@ class TerrainMesh:
 		greenLuminance = 0.587
 		blueLuminance = 0.114
 
-		return  (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
+		print (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
+		return (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
 
 class Struct : pass
 
@@ -212,7 +220,7 @@ def redrawAll(data):
 	glTexCoordPointer( 2, GL_FLOAT, 0, data.terrainMesh.textureCoordsAsString)
 
 	# Render landscape
-	glDrawArrays( GL_TRIANGLES, 0, data.terrainMesh.numVertices)
+	glDrawArrays( GL_TRIANGLE_FAN, 0, data.terrainMesh.numVertices)
 
 	# Disable Vertex arrays, disable texture coord arrays
 	glDisableClientState( GL_VERTEX_ARRAY)		
@@ -227,7 +235,7 @@ def renderObjects(data):
 def initGL (data, width, height):
 	# Load the mesh data
 	data.terrainMesh = TerrainMesh()
-	if (data.terrainMesh.loadHeightmap("../Terrain.bmp") == False):
+	if (data.terrainMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
 		#print "Error loading heightmap!"
 		sys.exit(1)
 
@@ -241,7 +249,7 @@ def initGL (data, width, height):
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)  
 	glEnable(GL_TEXTURE_2D)					# Enable texturing'
 	#glEnable(GL_CULL_FACE)
-	#glCullFace(GL_FRONT)
+	#glCullFace(GL_BACK)
 
 	glColor4f (1.0, 6.0, 6.0, 1.0)			# Set coloring color (?)
 
