@@ -40,7 +40,7 @@ class PyOculusValleyAnimation(object):
 		# Draw miscellaneous
 		
 		# Clear color and depth buffers
-		glClearColor(0.0, 0.0, 0.0, 0.0)
+		#glClearColor(0.0, 1.0, 0.0, 0.0)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		# Reset projecction matrix
@@ -66,43 +66,28 @@ class PyOculusValleyAnimation(object):
 		# // Enable Texture Coord Arrays
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
 
+
+		# Apply scene to the left eye first
+		glPushMatrix()
+		self.oculus.applyLeftEye()
+
 		# Get tostring of arry of vertices of landscape's triangles 
 		# and array of coordinates for its texture 
 		glVertexPointer(3, GL_FLOAT, 0, self.valleyMesh.m_pVertices_as_string)
 		glTexCoordPointer( 2, GL_FLOAT, 0, 
 								self.valleyMesh.m_pTexCoords_as_string)
 
-		# Apply scene to the left eye first
-		glPushMatrix()
-		self.oculus.applyLeftEye()
-
 		######
 		# DRAW THE LANDSCAPE HERE::: from TUTNeheHeightMap.py
 		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.m_nVertexCount)
 
-		# // Disable Pointers
-		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
-		# // Disable Texture Coord Arrays
-		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
-
-		####
-
 		glPopMatrix()
-
-
 
 		# Apply scene to the right eye next
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		# From TUTNeheHeightmap.py ::::
-		# // Enable Pointers
-		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
-		# // Enable Texture Coord Arrays
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
-
 		# DRAW THE LANDSCAPE HERE::: from TUTNeheHeightMap.py
-		#glColor3f(1.0, 0.0, 1.0)
 		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.m_nVertexCount)
 
 		# // Disable Pointers
@@ -213,6 +198,8 @@ class PyOculusValleyAnimation(object):
 	def initWorldData(self):
 		self.clicked = False
 		self.oculus = OculusCamera(self)
+		(initXPos, initYPos, initZPos) = ( 0.0, +220.0, 0.0)
+		self.oculus.setWorldCoordinates(initXPos, initYPos, initZPos)
 		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
 								"RIGHT":False}
 		self.timerDelay = 10 # 10 millis, want as many fps as possible

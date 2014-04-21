@@ -74,6 +74,11 @@ class Camera(object):
 			elif (self.zRot > 90.0):
 				self.zRot = 90.0
 
+	def setWorldCoordinates(self, newXPos, newYPos, newZPos):
+		self.xPos = newXPos
+		self.yPos = newYPos
+		self.zPos = newZPos
+
 	def move(self, dirStr):
 		if (dirStr == ""):
 			return
