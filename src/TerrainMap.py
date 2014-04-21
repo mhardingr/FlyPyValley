@@ -9,28 +9,14 @@ import Struct
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from OpenGL.arrays import vbo # Enables use of VBOs
+
 
 import numpy as npy # Need array speed boost
 
 import Image 	# PIL library
 import time
 
-class Vertex:
-	def __init__(self, x=0.0, y=0.0, z=0.0):
-		self.x= x
-		self.y = y
-		self.z = z
-
-	def getVertData(self):
-		return (self.x,self.y,self.z)
-
-class TextureCoordinates:
-	def __init__ (self, u=0.0, v=0.0):
-		self.u = u
-		self.v = v
-
-	def getTextureCoordsData():
-		return (self.u,self.v)
 
 class TerrainMesh:
 	# Constants:
@@ -42,9 +28,11 @@ class TerrainMesh:
 		
 		self.vertList = None
 		self.vertListAsString = None
+		self.verticesVBO = None		# Using VBOs
 
 		self.textureCoords = None
 		self.textureCoordsAsString = None
+		self.textureCoordsVBO = None # Using VBOs
 
 		self.textureId = None # Saves the reference given by GPU
 
@@ -71,7 +59,7 @@ class TerrainMesh:
 		# Create vertList (3D points) and textureCoords (2D coords)
 		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
 		# Use tuple input to describe size and dims of array
-		(vertexPointDims, texPointDims) = (1,2)
+		(vertexPointDims, texPointDims) = (3,2)
 		initHeight = 0.0
 
 		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
@@ -105,19 +93,19 @@ class TerrainMesh:
 												* heightScale)
 					z = fTerrPosZ - halfWidthY
 
-					self.vertList [terrPosX][terrPosZ] = y
+					self.vertList [vertIndex] = (x,y,z)
 					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 															(fTerrPosZ/widthY))
 					vertIndex += 1
 					textIndex += 1
 
-		# Now convert self.vertList to numpy array for easier toString conversion			
-		npVertList = npy.array(self.vertList, 'f')
-		self.vertListAsString = npVertList.tostring () # Use numpy method
+		# Now convert self.vertList to numpy array for easier toString conversion
+		self.vertListAsString = self.vertList.tostring () # Use numpy method
 		self.textureCoordsAsString = self.textureCoords.tostring ()
 
-		print self.vertListAsString
-		print self.textureCoordsAsString
+		# Update VBOs:
+		self.verticesVBO = vbo.VBO(self.vertList)
+		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
 
 
 		self.loadTextureToOpenGL()
@@ -165,10 +153,9 @@ class TerrainMesh:
 
 		return (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
 
-class Struct : pass
 
 class TerrainMapAnimation(object):
-	def keyPressed(self):
+	def keyPressed(self, eventArgs):
 		pass
 
 	def reshapeWindow(self, width, height):
@@ -190,7 +177,7 @@ class TerrainMapAnimation(object):
 
 	def redrawAll(self):
 		# Can do fps here ... (no GLOBALS)
-		print "Entered redrawAll!"
+
 		millis = time.clock() * 1000.0
 		if (millis - self.prevFPSCheck >= 1000.0):	# one second has passed
 			self.prevFPSCheck = time.clock() * 1000.0
@@ -219,22 +206,25 @@ class TerrainMapAnimation(object):
 		glEnableClientState( GL_VERTEX_ARRAY)			# Enable vertex arrays
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY)	# Enable tex. coord arrays
 
-		print "Pointers enabled!"
-
-		# Using strings way of pointing to arrays!
+		"""# Using strings way of pointing to arrays!
 		glVertexPointer( 3, GL_FLOAT, 0, self.terrainMesh.vertListAsString)
 		glTexCoordPointer( 2, GL_FLOAT, 0, self.terrainMesh.textureCoordsAsString)
+		"""
+		# USING VBOS: ROUTINE 
+		self.terrainMesh.verticesVBO.bind()
+		glVertexPointer( 3, GL_FLOAT, 0, None)
+		self.terrainMesh.textureCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)
+		
 
-		print "Vertices pointed to!"
 		# Render landscape
 		#self.renderLandscape()
 		glDrawArrays( GL_TRIANGLES, 0, self.terrainMesh.numVertices)
-		print "Array drawn!"
+
 		# Disable Vertex arrays, disable texture coord arrays
 		glDisableClientState( GL_VERTEX_ARRAY)		
 		glDisableClientState( GL_TEXTURE_COORD_ARRAY) 
 
-		print "Done drawing!"
 		glutSwapBuffers()
 
 
@@ -299,8 +289,8 @@ class TerrainMapAnimation(object):
 		glutDisplayFunc( lambda : self.redrawAll())
 		glutIdleFunc(lambda: self.redrawAll())
 		glutReshapeFunc(lambda width, height: self.reshapeWindow(width,height))
-		glutKeyboardFunc(lambda event: self.keyPressed(event))
-		glutSpecialFunc(lambda event: self.keyPressed(event)) #For directional keys
+		glutKeyboardFunc(lambda *eventData: self.keyPressed(eventData))
+		glutSpecialFunc(lambda *eventData: self.keyPressed(eventData)) #For directional keys
 
 	def animationLoop(self, width, height):
 		print "Entered animationLoop!"
