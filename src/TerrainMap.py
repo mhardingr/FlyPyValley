@@ -107,6 +107,8 @@ class TerrainMesh:
 		self.verticesVBO = vbo.VBO(self.vertList)
 		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
 
+		print "Length of vertList: %d" % len(self.vertList)
+
 
 		self.loadTextureToOpenGL()
 		return True 
@@ -226,29 +228,6 @@ class TerrainMapAnimation(object):
 		glDisableClientState( GL_TEXTURE_COORD_ARRAY) 
 
 		glutSwapBuffers()
-
-
-	# Code for rendering landscape adapted from:
-	# https://github.com/soumitrasaxena/TerrainGenerationOpenGL/
-	# blob/master/Terrain.cpp
-	def renderLandscape(self):
-		# Drawing using primitive drawing gl functions and GL_TRIANGLE_STRIP
-		# for proper terrain rendering
-		numXCoords = len(self.terrainMesh.vertList)
-		numZCoords = len(self.terrainMesh.vertList[0])
-		glColor3f(1.0, 1.0, 1.0)
-		print "Starting to draw:"
-		for zPos in xrange(numZCoords - 1):
-
-			glBegin(GL_TRIANGLE_STRIP)
-			for xPos in xrange(numXCoords):
-				yPos = self.terrainMesh.vertList [xPos][zPos]
-				glVertex3f(xPos, yPos, zPos)
-
-				nextZPos = zPos + 1
-				nextYPos = self.terrainMesh.vertList [xPos][nextZPos]
-				glVertex3f(xPos, nextYPos, nextZPos)
-			glEnd()
 
 	def renderObjects(self):
 		# Now do rendering: Draw all triangles at once!
