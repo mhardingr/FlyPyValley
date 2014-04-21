@@ -39,8 +39,8 @@ class TerrainMesh:
 		self.heightMapImage = None
 
 	def loadHeightmap( self, mapPath):
-		heightScale= self.MESH_HEIGHTSCALE
-		mapResolution = self.MESH_RESOLUTION
+		heightScale= float(self.MESH_HEIGHTSCALE)
+		mapResolution = float(self.MESH_RESOLUTION)
 		# With Error handling, load texture data
 		try:
 			self.heightMapImage = Image.open(mapPath)
@@ -80,6 +80,7 @@ class TerrainMesh:
 
 		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
 			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
+				#print (terrPosZ, terrPosX)
 				for triangle in xrange(numTrianglesPerUnitSquare):
 					fTerrPosX = float (terrPosX)
 					if (triangle == 1 or triangle == 2 or triangle == 5):
@@ -89,15 +90,93 @@ class TerrainMesh:
 						fTerrPosZ += mapResolution
 
 					x = fTerrPosX - halfLengthX
-					y=(self.findHeightInHeightmap(int(fTerrPosX),int(terrPosZ))
-												* heightScale)
+					y=self.findHeightInHeightmap(int(fTerrPosX),int(fTerrPosZ))* heightScale
 					z = fTerrPosZ - halfWidthY
+
+
 
 					self.vertList [vertIndex] = (x,y,z)
 					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 															(fTerrPosZ/widthY))
 					vertIndex += 1
 					textIndex += 1
+
+		self.vertList2 = npy.zeros ( (numVertices, vertexPointDims), 'f') 	
+		dictOfWrongIndices = dict()	
+		nZ = 0
+		nIndex = 0
+		nTIndex = 0
+		half_sizeX = float (lengthX) / 2.0
+		half_sizeY = float (widthY) / 2.0
+		flResolution_int = int (mapResolution)
+		flHeightScale = heightScale
+		while (nZ < widthY):
+			nX = 0
+			while (nX < lengthX):
+				for nTri in xrange (6):
+					# // Using This Quick Hack, Figure The X,Z Position Of The Point
+					flX = float (nX)
+					if (nTri == 1) or (nTri == 2) or (nTri == 5):
+						flX += mapResolution
+					flZ = float (nZ)
+					if (nTri == 2) or (nTri == 4) or (nTri == 5):
+						flZ += mapResolution
+					x = flX - half_sizeX
+					y = self.findHeightInHeightmap (int (flX), int (flZ)) * flHeightScale
+					z = flZ - half_sizeY
+					self.vertList2 [nIndex, 0] = x
+					self.vertList2 [nIndex, 1] = y
+					self.vertList2 [nIndex, 2] = z
+					self.textureCoords [nTIndex, 0] = flX / lengthX
+					self.textureCoords [nTIndex, 1] =  flZ / widthY
+
+					if (self.vertList[nIndex][1] != self.vertList2[nIndex][1]):
+						print "Wrong y-val found! %d" % nIndex
+						dictOfWrongIndices[nIndex] = (flX, flZ)
+
+					nIndex += 1
+					nTIndex += 1
+				nX += flResolution_int
+			nZ += flResolution_int
+
+		### NEEDS OWN method!
+		terrPosZ = 0 # Our row variable
+		vertIndex = 0
+		textIndex = 0
+		halfWidthY = widthY / 2.0
+		halfLengthX = lengthX / 2.0
+		mapResolutionInt = int (mapResolution)
+		numTrianglesPerUnitSquare = 6
+
+		# This algorithm is from the tutorial:
+		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
+
+		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
+			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
+				#print (terrPosZ, terrPosX)
+				for triangle in xrange(numTrianglesPerUnitSquare):
+					fTerrPosX = float (terrPosX)
+					if (triangle == 1 or triangle == 2 or triangle == 5):
+						fTerrPosX += mapResolution
+					fTerrPosZ = float (terrPosZ)
+					if (triangle == 2 or triangle == 4 or triangle == 5):
+						fTerrPosZ += mapResolution
+
+					x = fTerrPosX - halfLengthX
+					y=(self.findHeightInHeightmap(int(fTerrPosX),int(fTerrPosZ))
+												* heightScale)
+					z = fTerrPosZ - halfWidthY
+
+					if (vertIndex in dictOfWrongIndices):
+						print "Printing positions:", (dictOfWrongIndices[vertIndex]), (fTerrPosX,fTerrPosZ)
+
+
+					self.vertList [vertIndex] = (x,y,z)
+					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
+															(fTerrPosZ/widthY))
+					vertIndex += 1
+					textIndex += 1
+		
 
 		# Now convert self.vertList to numpy array for easier toString conversion
 		self.vertListAsString = self.vertList.tostring () # Use numpy method

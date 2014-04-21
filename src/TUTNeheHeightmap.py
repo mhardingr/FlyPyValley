@@ -164,6 +164,7 @@ class CMesh:
 		while (nZ < sizeY):
 			nX = 0
 			while (nX < sizeY):
+				print (nZ, nX)
 				for nTri in xrange (6):
 					# // Using This Quick Hack, Figure The X,Z Position Of The Point
 					flX = float (nX)
@@ -183,8 +184,45 @@ class CMesh:
 					nIndex += 1
 					nTIndex += 1
 
+					if (abs(y-0.0) < 0.00001):
+
+						print "params of PtHeight:", (int(flX),int(flZ)),
+					print "\t",(x,y,z)
 				nX += flResolution_int
 			nZ += flResolution_int
+
+		"""nZ = 0
+		nIndex = 0
+		nTIndex = 0
+		half_sizeX = float (lengthX) / 2.0
+		half_sizeY = float (widthY) / 2.0
+		flResolution_int = int (mapResolution)
+		flHeightScale = heightScale
+		while (nZ < widthY):
+			nX = 0
+			while (nX < lengthX):
+				for nTri in xrange (6):
+					# // Using This Quick Hack, Figure The X,Z Position Of The Point
+					flX = float (nX)
+					if (nTri == 1) or (nTri == 2) or (nTri == 5):
+						flX += mapResolution
+					flZ = float (nZ)
+					if (nTri == 2) or (nTri == 4) or (nTri == 5):
+						flZ += mapResolution
+					x = flX - half_sizeX
+					y = self.findHeightInHeightmap (int (flX), int (flZ)) * flHeightScale
+					z = flZ - half_sizeY
+					self.vertList [nIndex, 0] = x
+					self.vertList [nIndex, 1] = y
+					self.vertList [nIndex, 2] = z
+					self.textureCoords [nTIndex, 0] = flX / lengthX
+					self.textureCoords [nTIndex, 1] =  flZ / widthY
+					nIndex += 1
+					nTIndex += 1
+
+				nX += flResolution_int
+			nZ += flResolution_int
+		"""
 
 		self.m_pVertices_as_string = self.m_pVertices.tostring () 
 		self.m_pTexCoords_as_string = self.m_pTexCoords.tostring () 
