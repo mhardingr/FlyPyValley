@@ -143,6 +143,7 @@ class CMesh:
 		try:
 			self.m_pTextureImage = Image.open (szPath)						 	# // Open The Image
 		except:
+			print "Problem with loading the heightmap!"
 			return False
 
 		# // Generate Vertex Field
@@ -472,7 +473,6 @@ def keyPressed(*args):
 	return
 
 def main():
-	print "In GD main!"
 	global window
 	# pass arguments to init
 	glutInit(sys.argv)

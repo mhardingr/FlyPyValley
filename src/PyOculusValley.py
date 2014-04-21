@@ -1,15 +1,13 @@
 # PyOculusValley.py
 
-print "Shiz"
-
 from OculusCamera import *
+from TerrainMesh import *
 #from TUTNeheHeightmap import *
 
 
 class PyOculusValleyAnimation(object):
 
 	def animationTimer(self):
-		print "Entered timerfired!"
 		# Update orientation of Oculus!
 		self.oculus.updateOrientationRoutine()
 
@@ -42,7 +40,7 @@ class PyOculusValleyAnimation(object):
 		# Draw miscellaneous
 		
 		# Clear color and depth buffers
-		glClearColor(1.0,1.0,1.0,1.0)
+		glClearColor(0.0, 0.0, 0.0, 0.0)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		# Reset projecction matrix
@@ -62,27 +60,57 @@ class PyOculusValleyAnimation(object):
 		# Prepare the oculus to for drawing the next scene
 		self.oculus.updateOrientationRoutine()
 
+		# From TUTNeheHeightmap.py ::::
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+		# Get tostring of arry of vertices of landscape's triangles 
+		# and array of coordinates for its texture 
+		glVertexPointer(3, GL_FLOAT, 0, self.valleyMesh.m_pVertices_as_string)
+		glTexCoordPointer( 2, GL_FLOAT, 0, 
+								self.valleyMesh.m_pTexCoords_as_string)
+
 		# Apply scene to the left eye first
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		#self.camera.cameraUpdateGLRoutine()
+		######
+		# DRAW THE LANDSCAPE HERE::: from TUTNeheHeightMap.py
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.m_nVertexCount)
 
-		# Draw the scene to the left eye
-		glColor3f(0.0,178/255.0,200/255.0)
-		glutWireTeapot(25.0) # Draw wire cube
-		
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+		####
+
 		glPopMatrix()
+
+
 
 		# Apply scene to the right eye next
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		#self.camera.cameraUpdateGLRoutine()
+		# From TUTNeheHeightmap.py ::::
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
 
-		# Draw scene to the right eye
-		glColor3f(0.0,178/255.0,200/255.0)
-		glutWireTeapot(25.0) # Draw wire cube
+		# DRAW THE LANDSCAPE HERE::: from TUTNeheHeightMap.py
+		#glColor3f(1.0, 0.0, 1.0)
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.m_nVertexCount)
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+
 		glPopMatrix()
 
 		glutSwapBuffers()
@@ -101,7 +129,7 @@ class PyOculusValleyAnimation(object):
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
 		elif (keysym == "+"):
-			OculusCamera.noseToPupilDistance +=0.025
+			OculusCamera.noseToPupilDistance += 0.025
 			print OculusCamera.noseToPupilDistance
 		elif (keysym == "-"):
 			OculusCamera.noseToPupilDistance -= .025
@@ -147,11 +175,23 @@ class PyOculusValleyAnimation(object):
 	def initGL(self):
 		
 		glutInit()
-		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA)
+		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_ALPHA)
 		glutInitWindowPosition(0,0)
 		glutInitWindowSize(self.width, self.height)
 		glutCreateWindow("Headtracking Test")
 		glViewport(0, 0, self.width, self.height)# Create a viewport for window
+
+		# From TUTNeheHeightmap.py ::::
+		# Setup GL States
+		glClearColor (0.0, 0.0, 0.0, 0.5);							# // Black Background
+		glClearDepth (1.0);											# // Depth Buffer Setup
+		glDepthFunc (GL_LEQUAL);									# // The Type Of Depth Testing
+		glEnable (GL_DEPTH_TEST);									# // Enable Depth Testing
+		glShadeModel (GL_SMOOTH);									# // Select Smooth Shading
+		glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);			# // Set Perspective Calculations To Most Accurate
+		glEnable(GL_TEXTURE_2D);									# // Enable Texture Mapping
+		glColor4f (1.0, 6.0, 6.0, 1.0)		
+
 
 		# Callbacks
 		glutDisplayFunc(lambda : self.redrawAll())	# RedrawAll function called
@@ -177,11 +217,13 @@ class PyOculusValleyAnimation(object):
 								"RIGHT":False}
 		self.timerDelay = 10 # 10 millis, want as many fps as possible
 
+		self.valleyMesh = TerrainMesh()
+		self.valleyMesh.LoadHeightmap ("../rsc/Terrain.bmp")
+
 	def main(self):
 		(self.width, self.height) = (600, 480)
 		self.initWorldData()
 		self.initGL()
 
-print "Begin"
 myAnimation = PyOculusValleyAnimation()
 myAnimation.main()

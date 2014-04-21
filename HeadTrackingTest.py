@@ -400,6 +400,11 @@ class Animation(object):
 		# Draw scene to the right eye
 		glColor3f(0.0,178/255.0,200/255.0)
 		glutWireTeapot(25.0) # Draw wire cube
+
+		glRasterPos2i(100, 120);
+		glColor4f(0.0, 0.0, 1.0, 1.0);
+		glutBitmapString(GLUT_BITMAP_HELVETICA_18, "text to render");
+		#glutBitmapString(GLUT_STROKE_ROMAN, "cd")
 		glPopMatrix()
 
 		glutSwapBuffers()

@@ -1,7 +1,14 @@
 # TerrainMesh.py
 
 
-class CMesh:
+import Image 		# PIL
+import numpy		# For creating arrays and improve performance
+import OpenGL
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+from OpenGL.GLU import *
+
+class TerrainMesh:
 	""" // Mesh Data """
 	MESH_RESOLUTION = 4.0
 	MESH_HEIGHTSCALE = 1.0
@@ -25,14 +32,18 @@ class CMesh:
 		self.m_pTextureImage = None;							# // Heightmap Data
 
 
-	def LoadHeightmap( self, szPath, flHeightScale, flResolution ):
+	def LoadHeightmap( self, szPath): 
+
 		""" // Heightmap Loader """
 
+		flHeightScale=self.MESH_HEIGHTSCALE
+		flResolution =self.MESH_RESOLUTION
 		# // Error-Checking
 		# // Load Texture Data
 		try:
 			self.m_pTextureImage = Image.open (szPath)						 	# // Open The Image
 		except:
+			print "Problem with loading the heightmap!"
 			return False
 
 		# // Generate Vertex Field
