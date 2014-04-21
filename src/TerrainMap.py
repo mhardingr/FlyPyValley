@@ -50,8 +50,9 @@ class TerrainMesh:
 
 		self.heightMapImage = None
 
-	def loadHeightmap( self, mapPath, heightScale=MESH_HEIGHTSCALE,
-						 mapResolution = MESH_RESOLUTION):
+	def loadHeightmap( self, mapPath):
+		heightScale= self.MESH_HEIGHTSCALE
+		mapResolution = self.MESH_RESOLUTION
 		# With Error handling, load texture data
 		try:
 			self.heightMapImage = Image.open(mapPath)
@@ -73,13 +74,7 @@ class TerrainMesh:
 		(vertexPointDims, texPointDims) = (1,2)
 		initHeight = 0.0
 
-		# CLARIFY: Making a 2d list of height values, where xcoord == row
-		# and zcoord == col
-		# Iterating over the x-z plane of the given heightmap
-		# Number of xCoords:
-		numXCoords = lengthX / mapResolution * numPixelsPerVertex ** 0.58   # !
-		numZCoords = widthY / mapResolution * numPixelsPerVertex ** 0.58 	# !
-		self.vertList = [ [initHeight] * lengthX for zPixel in xrange(widthY) ] 
+		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
 		self.textureCoords= npy.zeros( (numVertices, texPointDims), 'f')
 
 
