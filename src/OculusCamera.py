@@ -15,7 +15,7 @@ import pyrift
 class OculusCamera(Camera):
 	# Stereo Camera implementation
 	degsPerRadian = 180.0 / pi
-	noseToPupilDistance = 2.3723	# Empirical data, in world units
+	noseToPupilDistance = 3.6973	# Empirical data, in world units
 	def __init__(self, world):
 		super(OculusCamera, self).__init__()
 		
@@ -100,7 +100,7 @@ class OculusCamera(Camera):
 
 		# Empirical tests show that reducing roll by 95% creates a more
 		# realistic world tilt
-		rollReduceFactor = 0.03
+		rollReduceFactor = 0.5
 		
 		# Convert rotation data to degrees for Opengl functions
 		xRotDegs = -xRotRads * OculusCamera.degsPerRadian

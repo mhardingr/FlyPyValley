@@ -94,7 +94,7 @@ class Camera(object):
 
 	def turnLeft(self):
 		# To turn "left" theta degrees from current line of sight
-		dTheta = -2.0 # degrees
+		dTheta = -0.5 # degrees
 		dThetaRads = dTheta / Camera.degsPerRadian
 		xRotRads = self.xRot / Camera.degsPerRadian
 		yRotRads = self.yRot / Camera.degsPerRadian
@@ -131,7 +131,7 @@ class Camera(object):
 
 	def turnRight(self):
 		# To turn "right" theta degrees from the current line of sight vector
-		dTheta = +2.0 # degrees
+		dTheta = +0.5 # degrees
 		self.orientatingYRotOffset += dTheta
 
 		self.yRot += dTheta

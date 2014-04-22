@@ -97,7 +97,9 @@ class PyOculusValleyAnimation(object):
 		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
 		# // Disable Texture Coord Arrays
 		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
-
+		
+		# Unload the texture from Opengl:
+		self.valleyMesh.unloadTextureFromOpenGL()
 
 		glPopMatrix()
 
@@ -106,7 +108,7 @@ class PyOculusValleyAnimation(object):
 		# Apply scene to the right eye next
 		glPushMatrix()
 		self.oculus.applyRightEye()
-		
+
 		# Bind the texture coordinates to this viewport:
 		self.valleyMesh.loadTextureToOpenGL()
 
@@ -133,6 +135,9 @@ class PyOculusValleyAnimation(object):
 		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
 		# // Disable Texture Coord Arrays
 		glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+		# Unload the texture from Opengl:
+		self.valleyMesh.unloadTextureFromOpenGL()
 
 		glPopMatrix()
 
