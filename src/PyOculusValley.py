@@ -69,6 +69,8 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
+		# Bind the texture coordinates to this viewport:
+		self.valleyMesh.loadTextureToOpenGL()
 
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
@@ -88,8 +90,8 @@ class PyOculusValleyAnimation(object):
 		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
 		
 		# Unbind the VBOs here:
-		self.valleyMesh.verticesVBO.unbind()
 		self.valleyMesh.textureCoordsVBO.unbind()
+		self.valleyMesh.verticesVBO.unbind()
 
 		# // Disable Pointers
 		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
@@ -99,17 +101,19 @@ class PyOculusValleyAnimation(object):
 
 		glPopMatrix()
 
-		# Apply scene to the right eye next
-		"""glPushMatrix()
-		self.oculus.applyRightEye()
 
+		###
+		# Apply scene to the right eye next
+		glPushMatrix()
+		self.oculus.applyRightEye()
+		
+		# Bind the texture coordinates to this viewport:
+		self.valleyMesh.loadTextureToOpenGL()
 
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
 		# // Enable Texture Coord Arrays
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
-
-
 
 
 		# Bind the Vertex Buffer Objects (VBOs) to graphics card
@@ -122,19 +126,15 @@ class PyOculusValleyAnimation(object):
 		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
 		
 		# Unbind the VBOs here:
-		self.valleyMesh.verticesVBO.unbind()
 		self.valleyMesh.textureCoordsVBO.unbind()
+		self.valleyMesh.verticesVBO.unbind()
 
 		# // Disable Pointers
 		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
 		# // Disable Texture Coord Arrays
 		glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
-		# Unbind the VBOs here:
-		self.valleyMesh.verticesVBO.unbind()
-		self.valleyMesh.textureCoordsVBO.unbind()
-
-		glPopMatrix()"""
+		glPopMatrix()
 
 		glutSwapBuffers()
 
@@ -251,7 +251,6 @@ class PyOculusValleyAnimation(object):
 			print "Error loading heightmap!"
 			sys.exit(1)
 
-		self.valleyMesh.loadTextureToOpenGL()
 	def main(self):
 		(self.width, self.height) = (600, 480)
 		self.initWorldData()
