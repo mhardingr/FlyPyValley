@@ -27,20 +27,17 @@ class TerrainMesh:
 		self.numVertices = 0
 		
 		self.vertList = None
-		self.vertListAsString = None
 		self.verticesVBO = None		# Using VBOs
 
 		self.textureCoords = None
-		self.textureCoordsAsString = None
 		self.textureCoordsVBO = None # Using VBOs
 
 		self.textureId = None # Saves the reference given by GPU
 
 		self.heightMapImage = None
 
-	def loadHeightmap( self, mapPath):
-		heightScale= float(self.MESH_HEIGHTSCALE)
-		mapResolution = float(self.MESH_RESOLUTION)
+	def loadHeightmap( self, mapPath, heightScale= MESH_HEIGHTSCALE, 
+							mapResolution = MESH_RESOLUTION):
 		# With Error handling, load texture data
 		try:
 			self.heightMapImage = Image.open(mapPath)
@@ -60,138 +57,59 @@ class TerrainMesh:
 		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
 		# Use tuple input to describe size and dims of array
 		(vertexPointDims, texPointDims) = (3,2)
-		initHeight = 0.0
 
 		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
 		self.textureCoords= npy.zeros( (numVertices, texPointDims), 'f')
 
-
-		### NEEDS OWN method!
-		terrPosZ = 0 # Our row variable
-		vertIndex = 0
-		textIndex = 0
-		halfWidthY = widthY / 2.0
-		halfLengthX = lengthX / 2.0
-		mapResolutionInt = int (mapResolution)
-		numTrianglesPerUnitSquare = 6
-
-		# This algorithm is from the tutorial:
-		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
-
-		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
-			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
-				#print (terrPosZ, terrPosX)
-				for triangle in xrange(numTrianglesPerUnitSquare):
-					fTerrPosX = float (terrPosX)
-					if (triangle == 1 or triangle == 2 or triangle == 5):
-						fTerrPosX += mapResolution
-					fTerrPosZ = float (terrPosZ)
-					if (triangle == 2 or triangle == 4 or triangle == 5):
-						fTerrPosZ += mapResolution
-
-					x = fTerrPosX - halfLengthX
-					y=self.findHeightInHeightmap(int(fTerrPosX),int(fTerrPosZ))* heightScale
-					z = fTerrPosZ - halfWidthY
-
-
-
-					self.vertList [vertIndex] = (x,y,z)
-					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
-															(fTerrPosZ/widthY))
-					vertIndex += 1
-					textIndex += 1
-
-		self.vertList2 = npy.zeros ( (numVertices, vertexPointDims), 'f') 	
-		dictOfWrongIndices = dict()	
-		nZ = 0
-		nIndex = 0
-		nTIndex = 0
-		half_sizeX = float (lengthX) / 2.0
-		half_sizeY = float (widthY) / 2.0
-		flResolution_int = int (mapResolution)
-		flHeightScale = heightScale
-		while (nZ < widthY):
-			nX = 0
-			while (nX < lengthX):
-				for nTri in xrange (6):
-					# // Using This Quick Hack, Figure The X,Z Position Of The Point
-					flX = float (nX)
-					if (nTri == 1) or (nTri == 2) or (nTri == 5):
-						flX += mapResolution
-					flZ = float (nZ)
-					if (nTri == 2) or (nTri == 4) or (nTri == 5):
-						flZ += mapResolution
-					x = flX - half_sizeX
-					y = self.findHeightInHeightmap (int (flX), int (flZ)) * flHeightScale
-					z = flZ - half_sizeY
-					self.vertList2 [nIndex, 0] = x
-					self.vertList2 [nIndex, 1] = y
-					self.vertList2 [nIndex, 2] = z
-					self.textureCoords [nTIndex, 0] = flX / lengthX
-					self.textureCoords [nTIndex, 1] =  flZ / widthY
-
-					if (self.vertList[nIndex][1] != self.vertList2[nIndex][1]):
-						print "Wrong y-val found! %d" % nIndex
-						dictOfWrongIndices[nIndex] = (flX, flZ)
-
-					nIndex += 1
-					nTIndex += 1
-				nX += flResolution_int
-			nZ += flResolution_int
-
-		### NEEDS OWN method!
-		terrPosZ = 0 # Our row variable
-		vertIndex = 0
-		textIndex = 0
-		halfWidthY = widthY / 2.0
-		halfLengthX = lengthX / 2.0
-		mapResolutionInt = int (mapResolution)
-		numTrianglesPerUnitSquare = 6
-
-		# This algorithm is from the tutorial:
-		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
-
-		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
-			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
-				#print (terrPosZ, terrPosX)
-				for triangle in xrange(numTrianglesPerUnitSquare):
-					fTerrPosX = float (terrPosX)
-					if (triangle == 1 or triangle == 2 or triangle == 5):
-						fTerrPosX += mapResolution
-					fTerrPosZ = float (terrPosZ)
-					if (triangle == 2 or triangle == 4 or triangle == 5):
-						fTerrPosZ += mapResolution
-
-					x = fTerrPosX - halfLengthX
-					y=(self.findHeightInHeightmap(int(fTerrPosX),int(fTerrPosZ))
-												* heightScale)
-					z = fTerrPosZ - halfWidthY
-
-					if (vertIndex in dictOfWrongIndices):
-						print "Printing positions:", (dictOfWrongIndices[vertIndex]), (fTerrPosX,fTerrPosZ)
-
-
-					self.vertList [vertIndex] = (x,y,z)
-					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
-															(fTerrPosZ/widthY))
-					vertIndex += 1
-					textIndex += 1
-		
-
-		# Now convert self.vertList to numpy array for easier toString conversion
-		self.vertListAsString = self.vertList.tostring () # Use numpy method
-		self.textureCoordsAsString = self.textureCoords.tostring ()
+		# Generate (x,y,z) tuples for every vertex in terrain from heightmap
+		self.createTerrainFromHeightmap(mapResolution, heightScale)
 
 		# Update VBOs:
 		self.verticesVBO = vbo.VBO(self.vertList)
 		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
 
-		print "Length of vertList: %d" % len(self.vertList)
-
-
 		self.loadTextureToOpenGL()
 		return True 
 		
+	def createTerrainFromHeightmap(self, mapResolution, heightScale):
+		## NEED TO CUT DOWN ON LENGTH HERE
+		
+		lengthX = self.heightMapImage.size [0]
+		widthY = self.heightMapImage.size [1]
+		terrPosZ = 0 # Our row variable
+		vertIndex = 0
+		textIndex = 0
+		halfWidthY = widthY / 2.0
+		halfLengthX = lengthX / 2.0
+		mapResolutionInt = int (mapResolution)
+		numTrianglesPerUnitSquare = 6
+
+		# This algorithm is from the tutorial:
+		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
+
+		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
+			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
+				for triangle in xrange(numTrianglesPerUnitSquare):
+					fTerrPosX = float (terrPosX)
+					if (triangle == 1 or triangle == 2 or triangle == 5):
+						fTerrPosX += mapResolution
+					fTerrPosZ = float (terrPosZ)
+					if (triangle == 2 or triangle == 4 or triangle == 5):
+						fTerrPosZ += mapResolution
+
+					x = fTerrPosX - halfLengthX
+					y=(self.findHeightInHeightmap(int(fTerrPosX),
+													int(fTerrPosZ))
+												* heightScale)
+					z = fTerrPosZ - halfWidthY
+
+					self.vertList [vertIndex] = (x,y,z)
+					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
+														(fTerrPosZ/widthY))
+					vertIndex += 1
+					textIndex += 1
+
+		return True
 
 	def loadTextureToOpenGL(self):
 		lengthX = self.heightMapImage.size [0]
@@ -224,8 +142,10 @@ class TerrainMesh:
 		red = float( pixel [0])
 		green = float (pixel[1])
 		blue = float (pixel[2])
-		pixel = self.heightMapImage.getpixel ( (pixelY, pixelX) ) # DK
+		pixel = self.heightMapImage.getpixel ( (pixelY, pixelX) ) 
 
+
+		# Adapted from NeheTutorial file:
 		# Luminance algorithm: using "grayness" to determine heighth in heightmap
 		# Whiter means higher, darker means lower heights
 		redLuminance = 0.299
@@ -265,7 +185,7 @@ class TerrainMapAnimation(object):
 			self.numFPS = self.numFrames
 			self.numFrames = 0
 
-			#print self.numFPS
+			print self.numFPS
 
 		self.numFrames += 1 					# Increment FPS counter
 		dRotation = (millis - self.prevTimeDraw) / 1000.0 * 10
@@ -287,10 +207,6 @@ class TerrainMapAnimation(object):
 		glEnableClientState( GL_VERTEX_ARRAY)			# Enable vertex arrays
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY)	# Enable tex. coord arrays
 
-		"""# Using strings way of pointing to arrays!
-		glVertexPointer( 3, GL_FLOAT, 0, self.terrainMesh.vertListAsString)
-		glTexCoordPointer( 2, GL_FLOAT, 0, self.terrainMesh.textureCoordsAsString)
-		"""
 		# USING VBOS: ROUTINE 
 		self.terrainMesh.verticesVBO.bind()
 		glVertexPointer( 3, GL_FLOAT, 0, None)
@@ -299,8 +215,9 @@ class TerrainMapAnimation(object):
 		
 
 		# Render landscape
-		#self.renderLandscape()
 		glDrawArrays( GL_TRIANGLES, 0, self.terrainMesh.numVertices)
+		self.terrainMesh.verticesVBO.unbind()
+		self.terrainMesh.textureCoordsVBO.unbind()
 
 		# Disable Vertex arrays, disable texture coord arrays
 		glDisableClientState( GL_VERTEX_ARRAY)		
@@ -308,9 +225,6 @@ class TerrainMapAnimation(object):
 
 		glutSwapBuffers()
 
-	def renderObjects(self):
-		# Now do rendering: Draw all triangles at once!
-		pass
 
 	def initGL (self, width, height):
 		# Load the mesh data
@@ -351,12 +265,10 @@ class TerrainMapAnimation(object):
 		glutSpecialFunc(lambda *eventData: self.keyPressed(eventData)) #For directional keys
 
 	def animationLoop(self, width, height):
-		print "Entered animationLoop!"
 		self.initGLUT(width, height)
 		self.initGL(width, height)
 		
 		# Enter glut mainloop
-		print "Entering main loop!"
 		glutMainLoop()
 
 	def runTerrain(self):

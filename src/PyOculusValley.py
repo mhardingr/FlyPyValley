@@ -71,15 +71,14 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		# Get tostring of arry of vertices of landscape's triangles 
-		# and array of coordinates for its texture 
-		glVertexPointer(3, GL_FLOAT, 0, self.valleyMesh.m_pVertices_as_string)
-		glTexCoordPointer( 2, GL_FLOAT, 0, 
-								self.valleyMesh.m_pTexCoords_as_string)
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		self.valleyMesh.verticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)
+		self.valleyMesh.textureCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)
 
-		######
-		# DRAW THE LANDSCAPE HERE::: from TUTNeheHeightMap.py
-		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.m_nVertexCount)
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
 
 		glPopMatrix()
 
@@ -87,8 +86,13 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		# DRAW THE LANDSCAPE HERE::: from TUTNeheHeightMap.py
-		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.m_nVertexCount)
+		# DRAW THE Landscape
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
+
+
+		# Unbind the VBOs here:
+		self.valleyMesh.verticesVBO.unbind()
+		self.valleyMesh.textureCoordsVBO.unbind()
 
 		# // Disable Pointers
 		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
@@ -205,7 +209,7 @@ class PyOculusValleyAnimation(object):
 		self.timerDelay = 10 # 10 millis, want as many fps as possible
 
 		self.valleyMesh = TerrainMesh()
-		self.valleyMesh.LoadHeightmap ("../rsc/Terrain.bmp")
+		self.valleyMesh.loadHeightmap ("../rsc/Terrain.bmp")
 
 	def main(self):
 		(self.width, self.height) = (600, 480)

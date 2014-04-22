@@ -1,122 +1,151 @@
 # TerrainMesh.py
 
+# Class taken from TerrainMap.py
+
+# Heightmap-to-terrain translation algorithms adapted from NEHE tutorial:
+# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
+
 
 import Image 		# PIL
-import numpy		# For creating arrays and improve performance
+import numpy as npy		# For creating arrays and improve performance
 import OpenGL
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
+from OpenGL.arrays import vbo # Enables use of VBOs
 
 class TerrainMesh:
-	""" // Mesh Data """
+	# Constants:
 	MESH_RESOLUTION = 4.0
 	MESH_HEIGHTSCALE = 1.0
 
-	def __init__ (self):
-		self.m_nVertexCount = 0;								# // Vertex Count
+	def __init__(self):
+		self.numVertices = 0
+		
+		self.vertList = None
+		self.verticesVBO = None		# Using VBOs
 
-		self.m_pVertices = None # Numeric.array ( (), 'f') 		# // Vertex Data array
-		self.m_pVertices_as_string = None						# raw memory string for VertexPointer ()
+		self.textureCoords = None
+		self.textureCoordsVBO = None # Using VBOs
 
-		self.m_pTexCoords = None # Numeric.array ( (), 'f') 	# // Texture Coordinates array
-		self.m_pTexCoords_as_string = None						# raw memory string for TexPointer ()
+		self.textureId = None # Saves the reference given by GPU
 
-		self.m_nTextureId = None;								# // Texture ID
+		self.heightMapImage = None
 
-		# // Vertex Buffer Object Names
-		self.m_nVBOVertices = None;								# // Vertex VBO Name
-		self.m_nVBOTexCoords = None;							# // Texture Coordinate VBO Name
-
-		# // Temporary Data
-		self.m_pTextureImage = None;							# // Heightmap Data
-
-
-	def LoadHeightmap( self, szPath): 
-
-		""" // Heightmap Loader """
-
-		flHeightScale=self.MESH_HEIGHTSCALE
-		flResolution =self.MESH_RESOLUTION
-		# // Error-Checking
-		# // Load Texture Data
+	def loadHeightmap( self, mapPath, heightScale= MESH_HEIGHTSCALE, 
+							mapResolution = MESH_RESOLUTION):
+		# With Error handling, load texture data
 		try:
-			self.m_pTextureImage = Image.open (szPath)						 	# // Open The Image
+			self.heightMapImage = Image.open(mapPath)
 		except:
-			print "Problem with loading the heightmap!"
+			print "Error opening file at %s" % (mapPath)
 			return False
 
-		# // Generate Vertex Field
-		sizeX = self.m_pTextureImage.size [0]
-		sizeY = self.m_pTextureImage.size [1]
-		self.m_nVertexCount = int ( sizeX * sizeY * 6 / ( flResolution * flResolution ) );
-		# self.m_pVertices = Numeric.zeros ((self.m_nVertexCount * 3), 'f') 			# // Vertex Data
-		# Non strings approach
-		self.m_pVertices = numpy.zeros ((self.m_nVertexCount, 3), 'f') 			# // Vertex Data
-		self.m_pTexCoords = numpy.zeros ((self.m_nVertexCount, 2), 'f') 			# // Texture Coordinates
+		# Create a mesh of vertices
+		lengthX = self.heightMapImage.size [0]
+		widthY = self.heightMapImage.size [1]
+		numPixelsPerVertex = 6
+		self.numVertices = int ( lengthX * widthY * numPixelsPerVertex 
+									/ (mapResolution ** 2) )
+		numVertices = self.numVertices
 
-		nZ = 0
-		nIndex = 0
-		nTIndex = 0
-		half_sizeX = float (sizeX) / 2.0
-		half_sizeY = float (sizeY) / 2.0
-		flResolution_int = int (flResolution)
-		while (nZ < sizeY):
-			nX = 0
-			while (nX < sizeY):
-				for nTri in xrange (6):
-					# // Using This Quick Hack, Figure The X,Z Position Of The Point
-					flX = float (nX)
-					if (nTri == 1) or (nTri == 2) or (nTri == 5):
-						flX += flResolution
-					flZ = float (nZ)
-					if (nTri == 2) or (nTri == 4) or (nTri == 5):
-						flZ += flResolution
-					x = flX - half_sizeX
-					y = self.PtHeight (int (flX), int (flZ)) * flHeightScale
-					z = flZ - half_sizeY
-					self.m_pVertices [nIndex, 0] = x
-					self.m_pVertices [nIndex, 1] = y
-					self.m_pVertices [nIndex, 2] = z
-					self.m_pTexCoords [nTIndex, 0] = flX / sizeX
-					self.m_pTexCoords [nTIndex, 1] =  flZ / sizeY
-					nIndex += 1
-					nTIndex += 1
+		# Create vertList (3D points) and textureCoords (2D coords)
+		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
+		# Use tuple input to describe size and dims of array
+		(vertexPointDims, texPointDims) = (3,2)
 
-				nX += flResolution_int
-			nZ += flResolution_int
+		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
+		self.textureCoords= npy.zeros( (numVertices, texPointDims), 'f')
 
-		self.m_pVertices_as_string = self.m_pVertices.tostring () 
-		self.m_pTexCoords_as_string = self.m_pTexCoords.tostring () 
+		# Generate (x,y,z) tuples for every vertex in terrain from heightmap
+		self.createTerrainFromHeightmap(mapResolution, heightScale)
 
-		# // Load The Texture Into OpenGL
-		self.m_nTextureID = glGenTextures (1)						# // Get An Open ID
-		glBindTexture( GL_TEXTURE_2D, self.m_nTextureID );			# // Bind The Texture
-		glTexImage2D( GL_TEXTURE_2D, 0, 3, sizeX, sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, 
-			self.m_pTextureImage.tostring ("raw", "RGB", 0, -1))
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		# Update VBOs:
+		self.verticesVBO = vbo.VBO(self.vertList)
+		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
 
-		# // Free The Texture Data
-		self.m_pTextureImage = None
-		return True;
+		self.loadTextureToOpenGL()
+		return True 
+		
+	def createTerrainFromHeightmap(self, mapResolution, heightScale):
+		## NEED TO CUT DOWN ON LENGTH HERE
+		
+		lengthX = self.heightMapImage.size [0]
+		widthY = self.heightMapImage.size [1]
+		terrPosZ = 0 # Our row variable
+		vertIndex = 0
+		textIndex = 0
+		halfWidthY = widthY / 2.0
+		halfLengthX = lengthX / 2.0
+		mapResolutionInt = int (mapResolution)
+		numTrianglesPerUnitSquare = 6
 
-	def PtHeight (self, nX, nY):
-		""" // Calculate The Position In The Texture, Careful Not To Overflow """
-		sizeX = self.m_pTextureImage.size [0]
-		sizeY = self.m_pTextureImage.size [1]
-		if (nX >= sizeX or nY >= sizeY):
+		# This algorithm is from the tutorial:
+		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
+
+		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
+			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
+				for triangle in xrange(numTrianglesPerUnitSquare):
+					fTerrPosX = float (terrPosX)
+					if (triangle == 1 or triangle == 2 or triangle == 5):
+						fTerrPosX += mapResolution
+					fTerrPosZ = float (terrPosZ)
+					if (triangle == 2 or triangle == 4 or triangle == 5):
+						fTerrPosZ += mapResolution
+
+					x = fTerrPosX - halfLengthX
+					y=(self.findHeightInHeightmap(int(fTerrPosX),
+													int(fTerrPosZ))
+												* heightScale)
+					z = fTerrPosZ - halfWidthY
+
+					self.vertList [vertIndex] = (x,y,z)
+					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
+														(fTerrPosZ/widthY))
+					vertIndex += 1
+					textIndex += 1
+
+		return True
+
+	def loadTextureToOpenGL(self):
+		lengthX = self.heightMapImage.size [0]
+		widthY = self.heightMapImage.size [1]
+		self.textureId = glGenTextures(1)	# Bug was here!!! 
+		glBindTexture( GL_TEXTURE_2D, self.textureId)
+		glTexImage2D (GL_TEXTURE_2D,0, 3, lengthX, widthY,0,GL_RGB,
+							GL_UNSIGNED_BYTE, 
+							self.heightMapImage.tostring("raw", "RGB",0,
+																-1))
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
+
+		# Free the texture data
+		self.heightMapImage = None
+			
+	def findHeightInHeightmap( self, pixelX, pixelY):
+		# Finds the height at pt (pixelX,pixelY)
+		lengthX = self.heightMapImage.size [0]
+		widthY = self.heightMapImage.size [1]
+
+		if ((pixelX >= lengthX or pixelX < 0)or(pixelY >=widthY or pixelY<0)):
 			return 0
+			
+		# Note: Image will begin reading at top left of image, but window coords 
+		# start at bottom left
+		# Here we find RGB components of pixels in heightmap
+		adjustedPixelY = widthY - 1 - pixelY
+		pixel = self.heightMapImage.getpixel ((pixelX, adjustedPixelY))
+		red = float( pixel [0])
+		green = float (pixel[1])
+		blue = float (pixel[2])
+		pixel = self.heightMapImage.getpixel ( (pixelY, pixelX) ) 
 
-		# Get The Red, Green, and Blue Components 
-		# NOTE, Python Image library starts 0 at the top of the image - so to match the windows
-		# code we reverse the Y order 
-		pixel = self.m_pTextureImage.getpixel ((nX, sizeY - nY - 1))
-		flR = float (pixel [0])
-		flG = float (pixel [1])
-		flB = float (pixel [2])
-		pixel = self.m_pTextureImage.getpixel ((nY, nX))
 
-		# // Calculate The Height Using The Luminance Algorithm
-		print ( (0.299 * flR) + (0.587 * flG) + (0.114 * flB) )
-		return 	( (0.299 * flR) + (0.587 * flG) + (0.114 * flB) )		
+		# Adapted from NeheTutorial file:
+		# Luminance algorithm: using "grayness" to determine heighth in heightmap
+		# Whiter means higher, darker means lower heights
+		redLuminance = 0.299
+		greenLuminance = 0.587
+		blueLuminance = 0.114
+
+		return (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
