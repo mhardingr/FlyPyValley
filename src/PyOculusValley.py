@@ -2,7 +2,12 @@
 
 from OculusCamera import *
 from TerrainMesh import *
-#from TUTNeheHeightmap import *
+
+# PyOpenGl modules
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
+from OpenGL.arrays import vbo # Enables use of VBOs
 
 
 class PyOculusValleyAnimation(object):
@@ -32,6 +37,8 @@ class PyOculusValleyAnimation(object):
 
 
 	def practiceRender(self):
+		# ~30 lines of code!
+
 		# Routine:
 		# Clear buffer bits
 		# loadIdentity for Projection plane
@@ -40,15 +47,13 @@ class PyOculusValleyAnimation(object):
 		# Draw miscellaneous
 		
 		# Clear color and depth buffers
-		#glClearColor(0.0, 1.0, 0.0, 0.0)
+		glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		# Reset projecction matrix
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
-		self.degFOV = 60.0
-		self.nearClip = 0.2
-		self.farClip = 1000
+
 		############################################################
 		gluPerspective(self.degFOV, self.width / float(self.height),
 						 self.nearClip, self.farClip)
@@ -60,16 +65,18 @@ class PyOculusValleyAnimation(object):
 		# Prepare the oculus to for drawing the next scene
 		self.oculus.updateOrientationRoutine()
 
-		# From TUTNeheHeightmap.py ::::
+		# Apply scene to the left eye first
+		glPushMatrix()
+		self.oculus.applyLeftEye()
+
+
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
 		# // Enable Texture Coord Arrays
 		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
 
 
-		# Apply scene to the left eye first
-		glPushMatrix()
-		self.oculus.applyLeftEye()
+
 
 		# Bind the Vertex Buffer Objects (VBOs) to graphics card
 		self.valleyMesh.verticesVBO.bind()
@@ -79,17 +86,7 @@ class PyOculusValleyAnimation(object):
 
 		# DRAW THE LANDSCAPE HERE
 		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
-
-		glPopMatrix()
-
-		# Apply scene to the right eye next
-		glPushMatrix()
-		self.oculus.applyRightEye()
-
-		# DRAW THE Landscape
-		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
-
-
+		
 		# Unbind the VBOs here:
 		self.valleyMesh.verticesVBO.unbind()
 		self.valleyMesh.textureCoordsVBO.unbind()
@@ -101,6 +98,43 @@ class PyOculusValleyAnimation(object):
 
 
 		glPopMatrix()
+
+		# Apply scene to the right eye next
+		"""glPushMatrix()
+		self.oculus.applyRightEye()
+
+
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+
+
+
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		self.valleyMesh.verticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)
+		self.valleyMesh.textureCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)
+
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
+		
+		# Unbind the VBOs here:
+		self.valleyMesh.verticesVBO.unbind()
+		self.valleyMesh.textureCoordsVBO.unbind()
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+		# Unbind the VBOs here:
+		self.valleyMesh.verticesVBO.unbind()
+		self.valleyMesh.textureCoordsVBO.unbind()
+
+		glPopMatrix()"""
 
 		glutSwapBuffers()
 
@@ -172,13 +206,13 @@ class PyOculusValleyAnimation(object):
 
 		# From TUTNeheHeightmap.py ::::
 		# Setup GL States
-		glClearColor (0.0, 0.0, 0.0, 0.5);							# // Black Background
-		glClearDepth (1.0);											# // Depth Buffer Setup
-		glDepthFunc (GL_LEQUAL);									# // The Type Of Depth Testing
-		glEnable (GL_DEPTH_TEST);									# // Enable Depth Testing
-		glShadeModel (GL_SMOOTH);									# // Select Smooth Shading
-		glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);			# // Set Perspective Calculations To Most Accurate
-		glEnable(GL_TEXTURE_2D);									# // Enable Texture Mapping
+		glClearColor (192/255.0,192/255.0, 192/255.0, 0.5);# // Black Background
+		glClearDepth (1.0);								   # // Depth Buffer Setup
+		glDepthFunc (GL_LEQUAL);						   # // The Type Of Depth Testing
+		glEnable (GL_DEPTH_TEST);							# // Enable Depth Testing
+		glShadeModel (GL_SMOOTH);							# // Select Smooth Shading
+		glEnable(GL_TEXTURE_2D);							# // Enable Texture Mapping
+		glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	# // Set Perspective Calculations To Most Accurate
 		glColor4f (1.0, 6.0, 6.0, 1.0)		
 
 
@@ -189,7 +223,7 @@ class PyOculusValleyAnimation(object):
 		glutKeyboardFunc(lambda *eventArgs: self.normalKeyEvent(eventArgs))
 		# To handle arrow keys:
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
-		glutSpecialUpFunc(lambda *event: self.keyUpEventHandler(event))
+		glutSpecialUpFunc(lambda *eventArgs: self.keyUpEventHandler(eventArgs))
 		# Fullscreen
 		glutFullScreen()
 
@@ -200,17 +234,24 @@ class PyOculusValleyAnimation(object):
 		glutMainLoop()
 
 	def initWorldData(self):
-		self.clicked = False
 		self.oculus = OculusCamera(self)
 		(initXPos, initYPos, initZPos) = ( 0.0, +220.0, 0.0)
 		self.oculus.setWorldCoordinates(initXPos, initYPos, initZPos)
 		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
 								"RIGHT":False}
 		self.timerDelay = 10 # 10 millis, want as many fps as possible
+		self.degFOV = 60.0
+		self.nearClip = 0.2
+		self.farClip = 1000
+
 
 		self.valleyMesh = TerrainMesh()
-		self.valleyMesh.loadHeightmap ("../rsc/Terrain.bmp")
+		
+		if (self.valleyMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
+			print "Error loading heightmap!"
+			sys.exit(1)
 
+		self.valleyMesh.loadTextureToOpenGL()
 	def main(self):
 		(self.width, self.height) = (600, 480)
 		self.initWorldData()

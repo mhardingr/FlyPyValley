@@ -41,6 +41,8 @@ class TerrainMesh:
 			print "Error opening file at %s" % (mapPath)
 			return False
 
+		print "I am in loadHeightmap()"
+		
 		# Create a mesh of vertices
 		lengthX = self.heightMapImage.size [0]
 		widthY = self.heightMapImage.size [1]
@@ -64,7 +66,9 @@ class TerrainMesh:
 		self.verticesVBO = vbo.VBO(self.vertList)
 		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
 
-		self.loadTextureToOpenGL()
+		print "finishing loadHeightmap()"
+
+		assert(self.loadTextureToOpenGL() == True)
 		return True 
 		
 	def createTerrainFromHeightmap(self, mapResolution, heightScale):
@@ -107,6 +111,7 @@ class TerrainMesh:
 
 		return True
 
+
 	def loadTextureToOpenGL(self):
 		lengthX = self.heightMapImage.size [0]
 		widthY = self.heightMapImage.size [1]
@@ -119,8 +124,12 @@ class TerrainMesh:
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
 
+		print "Texture was binded!"
+
 		# Free the texture data
-		self.heightMapImage = None
+		#self.heightMapImage = None
+
+		return True
 			
 	def findHeightInHeightmap( self, pixelX, pixelY):
 		# Finds the height at pt (pixelX,pixelY)

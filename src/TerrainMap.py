@@ -45,6 +45,7 @@ class TerrainMesh:
 			print "Error opening file at %s" % (mapPath)
 			return False
 
+		print "I am in loadHeightmap()"
 		# Create a mesh of vertices
 		lengthX = self.heightMapImage.size [0]
 		widthY = self.heightMapImage.size [1]
@@ -68,7 +69,9 @@ class TerrainMesh:
 		self.verticesVBO = vbo.VBO(self.vertList)
 		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
 
-		self.loadTextureToOpenGL()
+		print "finishing loadHeightmap()"
+
+		assert(self.loadTextureToOpenGL() == True)
 		return True 
 		
 	def createTerrainFromHeightmap(self, mapResolution, heightScale):
@@ -123,8 +126,12 @@ class TerrainMesh:
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
 
+		print "Texture was binded!"
+
 		# Free the texture data
-		self.heightMapImage = None
+		#self.heightMapImage = None
+
+		return True
 			
 	def findHeightInHeightmap( self, pixelX, pixelY):
 		# Finds the height at pt (pixelX,pixelY)
@@ -193,12 +200,13 @@ class TerrainMapAnimation(object):
 		self.flyRot += dRotation
 
 		# Clear screen and depth 
+		glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) 
 		glLoadIdentity()		# Rest the modelview matrix
 
 		# Move the camera
-		(camX, camY, camZ)= (0.0, -220.0, 0.0)
-		glTranslatef( camX, camY, camZ)	# Make sure above terrain
+		(camX, camY, camZ)= (0.0, 220.0, 0.0)
+		glTranslatef( -camX, -camY, -camZ)	# Make sure above terrain
 
 		glRotatef( 10.0, 1.0, 0.0, 0.0) # look down slightly
 		glRotatef( self.flyRot, 0.0, 1.0, 0.0)
@@ -230,7 +238,7 @@ class TerrainMapAnimation(object):
 		# Load the mesh data
 		self.terrainMesh = TerrainMesh()
 		if (self.terrainMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
-			#print "Error loading heightmap!"
+			print "Error loading heightmap!"
 			sys.exit(1)
 
 		# Setup GL states
