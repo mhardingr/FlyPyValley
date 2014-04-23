@@ -100,7 +100,7 @@ class OculusCamera(Camera):
 
 		# Empirical tests show that reducing roll by 95% creates a more
 		# realistic world tilt
-		rollReduceFactor = 0.5
+		rollReduceFactor = 0.2
 		
 		# Convert rotation data to degrees for Opengl functions
 		xRotDegs = -xRotRads * OculusCamera.degsPerRadian
