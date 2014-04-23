@@ -5,7 +5,7 @@
 # Heightmap-to-terrain translation algorithms adapted from NEHE tutorial:
 # http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
-
+import random		# Used in texturing!
 import Image 		# PIL
 import numpy as npy		# For creating arrays and improve performance
 import OpenGL
@@ -106,7 +106,7 @@ class TerrainMesh:
 
 					# Using a separate image for texturing: 
 					# Color in color based on height of this current vertice
-					#self.setColorValueForTextureImage(texPixelX,y,texPixelZ)
+					self.setColorValueForTextureImage(texPixelX,y,texPixelZ)
 					self.vertList [vertIndex] = (x,y,z)
 					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 														(fTerrPosZ/widthY))
@@ -115,6 +115,41 @@ class TerrainMesh:
 
 		return True
 
+	def setColorValueForTextureImage(self, pixelXCoord,heightVal,pixelYCoord):
+		lengthX = self.textureImage.size[0]
+		widthY = self.textureImage.size[1]
+		# Note: Image will begin reading at top left of image, but window coords 
+		# start at bottom left
+		# Here we find RGB components of pixels in heightmap
+		adjustedPixelY = widthY - 1 - pixelYCoord
+
+		textureColorAtPixel = self.selectColorFromHeightValue(heightVal)
+		print "Color:", textureColorAtPixel
+
+	def selectColorFromHeightValue(self, heightVal):
+		# Our color palette:
+		dirtBlack = (0, 0, 0)
+		mudBrown = (160, 82, 45)	# Sienna color
+		valleyGreen = (34, 139, 34)# Forest green
+		snowWhite = (250, 250, 240)# Floral white
+		# Constants
+		(maxHeight, minHeight, terrFactor) = (255.0, 0.0, 0)
+		(groundFloor, grassRockBound, rockSnowBound) = (0.0, 100.0, 200.0)
+		selectedColor = None
+		colorPossibilities = list()
+		if (groundFloor <= heightVal <= grassRockBound):
+			terrFactor = (heightVal - groundFloor) / (grassRockBound)
+			colorPossibilities = [valleyGreen, mudBrown]
+		elif (grassRockBound < heightVal <= rockSnowBound):
+			terrFactor =((heightVal-grassRockBound) 
+								/ (rockSnowBound-grassRockBound))
+			colorPossibilities = [mudBrown, dirtBlack]
+		else:
+			terrainFactor = 0.0	# Want to assure only snow is present at caps
+			colorPossibilities = [snowWhite]		
+
+		colorChoice = random.randint(0,1) *terrFactor
+		return colorPossibilities[ int(round(colorChoice)) ]
 
 	def loadTextureToOpenGL(self):
 		lengthX = self.heightMapImage.size [0]
@@ -124,7 +159,7 @@ class TerrainMesh:
 		glBindTexture( GL_TEXTURE_2D, self.textureId)
 		glTexImage2D (GL_TEXTURE_2D,0, 3, lengthX, widthY,0,GL_RGB,
 							GL_UNSIGNED_BYTE, 
-							self.heightMapImage.tostring("raw", "RGB",0,
+							self.textureImage.tostring("raw", "RGB",0,
 																-1))
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
