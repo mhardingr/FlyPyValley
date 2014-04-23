@@ -115,21 +115,30 @@ class TerrainMesh:
 
 		return True
 
-	def setColorValueForTextureImage(self, pixelXCoord,heightVal,pixelYCoord):
+	def setColorValueForTextureImage(self, pixelX,heightVal,pixelY):
 		lengthX = self.textureImage.size[0]
 		widthY = self.textureImage.size[1]
 		# Note: Image will begin reading at top left of image, but window coords 
 		# start at bottom left
 		# Here we find RGB components of pixels in heightmap
-		adjustedPixelY = widthY - 1 - pixelYCoord
-		if ((pixelXCoord <0 or adjustedPixelY<0)
-				 or (pixelXCoord >= lengthX or adjustedPixelY>=widthY)):
-			#heightVal = 0	# Overwrite heightval so a green color is selected
-			return 
-		print (pixelXCoord, adjustedPixelY)
+		adjustedPixelY = widthY - 1 - pixelY
+
+		dirs = [(-2,-2), (-2,-1), (-2,0), (-2, +1), (-2,+2),
+				(-1,-2), (-1,-1), (-1,0), (-1,+1),  (-1,+2),
+				(0,-2), (0,-1), (0,0), (0,+1),  (0,+2),
+				(+1,-2), (+1,-1), (+1,0), (+1,+1),  (+1,+2),
+				(+2,-2), (+2,-1), (+2,0), (+2,+1),  (+2,+2)]
+
 		textureColorAtPixel = self.selectColorFromHeightValue(heightVal)
-		currentPixel = (pixelXCoord, adjustedPixelY)
-		self.textureImage.putpixel(currentPixel, textureColorAtPixel)
+		# Extrapolate chosen color to 9 pixel-area
+		for currDir in dirs:	
+			(dX, dY) = currDir
+			(currPixelX, currPixelY) = (pixelX+dX, adjustedPixelY + dY)
+			if ((currPixelX <0 or currPixelY<0)
+					 or (currPixelX>= lengthX or currPixelY>=widthY)):
+				continue	# If pixels out of range, try next direction
+			currentPixel = (currPixelX, currPixelY)
+			self.textureImage.putpixel(currentPixel, textureColorAtPixel)
 		return 
 
 	def selectColorFromHeightValue(self, heightVal):
@@ -177,7 +186,6 @@ class TerrainMesh:
 			
 	def findHeightInHeightmap( self, pixelX, pixelY):
 		# Finds the height at pt (pixelX,pixelY)
-		print "In findHeightInHeightmap:"
 
 		lengthX = self.heightMapImage.size [0]
 		widthY = self.heightMapImage.size [1]
@@ -194,8 +202,6 @@ class TerrainMesh:
 		green = float (pixel[1])
 		blue = float (pixel[2])
 		pixel = self.heightMapImage.getpixel ( (pixelY, pixelX) ) 
-
-		print (pixelX, adjustedPixelY)
 
 		# Adapted from NeheTutorial file:
 		# Luminance algorithm: using "grayness" to determine heighth in heightmap
