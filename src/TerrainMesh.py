@@ -25,6 +25,7 @@ class TerrainMesh:
 		self.vertList = None
 		self.verticesVBO = None		# Using VBOs
 
+		self.textureImage = None	# Translate heightmap into color image
 		self.textureCoords = None
 		self.textureCoordsVBO = None # Using VBOs
 
@@ -48,6 +49,9 @@ class TerrainMesh:
 		self.numVertices = int ( lengthX * widthY * numPixelsPerVertex 
 									/ (mapResolution ** 2) )
 		numVertices = self.numVertices
+
+		# Initialize the textureImage using the same dim.s as heightmap
+		self.textureImage = Image.new("RGB", size=(widthY,lengthX))
 
 		# Create vertList (3D points) and textureCoords (2D coords)
 		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
@@ -80,7 +84,7 @@ class TerrainMesh:
 		mapResolutionInt = int (mapResolution)
 		numTrianglesPerUnitSquare = 6
 
-		# This algorithm is from the tutorial:
+		# This algorithm is translated from the tutorial:
 		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
 		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
@@ -94,11 +98,15 @@ class TerrainMesh:
 						fTerrPosZ += mapResolution
 
 					x = fTerrPosX - halfLengthX
-					y=(self.findHeightInHeightmap(int(fTerrPosX),
-													int(fTerrPosZ))
-												* heightScale)
+					(texPixelX,texPixelZ) = (int(fTerrPosX),int(fTerrPosZ))
+					y=(self.findHeightInHeightmap(texPixelX,texPixelZ)
+													*heightScale)
+												
 					z = fTerrPosZ - halfWidthY
 
+					# Using a separate image for texturing: 
+					# Color in color based on height of this current vertice
+					#self.setColorValueForTextureImage(texPixelX,y,texPixelZ)
 					self.vertList [vertIndex] = (x,y,z)
 					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 														(fTerrPosZ/widthY))
