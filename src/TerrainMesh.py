@@ -122,9 +122,15 @@ class TerrainMesh:
 		# start at bottom left
 		# Here we find RGB components of pixels in heightmap
 		adjustedPixelY = widthY - 1 - pixelYCoord
-
+		if ((pixelXCoord <0 or adjustedPixelY<0)
+				 or (pixelXCoord >= lengthX or adjustedPixelY>=widthY)):
+			#heightVal = 0	# Overwrite heightval so a green color is selected
+			return 
+		print (pixelXCoord, adjustedPixelY)
 		textureColorAtPixel = self.selectColorFromHeightValue(heightVal)
-		print "Color:", textureColorAtPixel
+		currentPixel = (pixelXCoord, adjustedPixelY)
+		self.textureImage.putpixel(currentPixel, textureColorAtPixel)
+		return 
 
 	def selectColorFromHeightValue(self, heightVal):
 		# Our color palette:
@@ -171,6 +177,8 @@ class TerrainMesh:
 			
 	def findHeightInHeightmap( self, pixelX, pixelY):
 		# Finds the height at pt (pixelX,pixelY)
+		print "In findHeightInHeightmap:"
+
 		lengthX = self.heightMapImage.size [0]
 		widthY = self.heightMapImage.size [1]
 
@@ -187,6 +195,7 @@ class TerrainMesh:
 		blue = float (pixel[2])
 		pixel = self.heightMapImage.getpixel ( (pixelY, pixelX) ) 
 
+		print (pixelX, adjustedPixelY)
 
 		# Adapted from NeheTutorial file:
 		# Luminance algorithm: using "grayness" to determine heighth in heightmap
