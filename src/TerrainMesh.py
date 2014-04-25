@@ -22,10 +22,22 @@ class TerrainMesh:
 	def __init__(self):
 		self.numVertices = 0
 		
-		self.vertList = None
-		# Using Vertex Buffer Obj. (GPU memory) for increased performance
-		self.verticesVBO = None		
+		self.initVertexTypeListsAndVertexTypeVBOs()
 
+		self.initTexturesAndTextureVBOs()
+		self.heightMapImage = None
+
+	def initVertexTypeListsAndVertexTypeVBOs():
+		self.grassVertList = None
+		self.groundVertList = None
+		self.snowVertList = None
+		
+		# Using Vertex Buffer Obj. (GPU memory) for increased performance
+		self.grassVerticesVBO = None	
+		self.groundVerticesVBO = None
+		self.snowVerticesVBO = None
+
+	def initTexturesAndTextureVBOs(self):
 		self.textureGrassImage = None 
 		self.textureGroundImage = None
 		self.textureSnowImage = None
@@ -44,8 +56,6 @@ class TerrainMesh:
 		self.textureGrassId = None 
 		self.textureGroundId = None
 		self.textureSnowId = None
-
-		self.heightMapImage = None
 
 	def loadHeightmap( self, mapPath, heightScale= MESH_HEIGHTSCALE, 
 							mapResolution = MESH_RESOLUTION):
@@ -187,7 +197,12 @@ class TerrainMesh:
 		return True
 
 	def mapVertexToTerrainTexture(vertexHeight):
-		pass
+		# Height thresholds for each terrain type
+		grassLowerThresholdHeight = 0.0	
+		groundLowerThresholdHeight = 75.0	
+		snowLowerThresholdHeight = 200.0
+
+
 
 
 	"""def setColorValueForTextureImage(self, pixelX,heightVal,pixelY):
