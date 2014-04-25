@@ -51,7 +51,7 @@ class TerrainMesh:
 							mapResolution = MESH_RESOLUTION):
 		
 		if (self.openValleyImages(heightmapPath = mapPath) == False):
-			print "System error! Could not open images! Aborting..."
+			print "Program error! Could not open images! Aborting..."
 			sys.exit(0)
 
 		# Create a mesh of vertices
@@ -62,26 +62,26 @@ class TerrainMesh:
 									/ (mapResolution ** 2) )
 		numVertices = self.numVertices
 
-		# Initialize the textureImage using the same dim.s as heightmap
-		self.textureImage = Image.new("RGB", size=(widthY,lengthX))
-
-		# Create vertList (3D points) and textureCoords (2D coords)
+		# Create vertList (3D points) and 3 textureCoords (2D coords) arrays
 		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
 		# Use tuple input to describe size and dims of array
-		(vertexPointDims, texPointDims) = (3,2)
+		(vertexPointDims, texDims) = (3,2)
 
 		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
-		self.textureCoords= npy.zeros( (numVertices, texPointDims), 'f')
+		self.textureGrassVertexCoords= npy.zeros((numVertices, texDims),'f')
+		self.textureGroundVertexCoords= npy.zeros((numVertices, texDims),'f')
+		self.textureSnowVertexCoords= npy.zeros((numVertices, texDims),'f')
 
 		# Generate (x,y,z) tuples for every vertex in terrain from heightmap
 		self.createTerrainFromHeightmap(mapResolution, heightScale)
 
 		# Update VBOs:
 		self.verticesVBO = vbo.VBO(self.vertList)
-		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
+		self.textureGrassCoordsVBO = vbo.VBO(self.textureGrassCoords)
+		self.textureGroundCoordsVBO = vbo.VBO(self.textureGroundCoords)
+		self.textureSnowCoordsVBO = vbo.VBO(self.textureSnowCoords)
 
-		assert(self.loadTextureToOpenGL() == True)
-		return True 
+		return self.loadTextureToOpenGL()
 
 	def openValleyImages(self, heightmapPath):
 		self.grassImagePath = "../rsc/seamlesslonggreengrass.bmp"
@@ -117,7 +117,34 @@ class TerrainMesh:
 			print "Error opening file at %s" % (self.snowImagePath)
 			return False
 		return True # Successfully opened file paths"""
+
+		self.initImageDataRoutine()
+
+	def initImageDataRoutine(self):
+		# For grass texture
+		# Will save how many vertices have been bound to grass texels
+		self.textureGrassCoordIndex = 0	
+		self.textureGrassLengthX = self.textureGrassImage.size[0]
+		self.textureGrassWidthY = self.textureGrassImage.size[1]
+		self.textureGrassCurrX = 0	# Current pixel coords to bind to
+		self.textureGrassCurrY = 0
 		
+		# For ground texture
+		# Will save how many vertices have been bound to ground texels
+		self.textureGroundCoordIndex = 0	
+		self.textureGroundLengthX = self.textureGroundImage.size[0]
+		self.textureGroundWidthY = self.textureGroundImage.size[1]
+		self.textureGroundCurrX = 0	# Current pixel coords to bind to
+		self.textureGroundCurrY = 0
+
+		# For snow texture
+		# Will save how many vertices have been bound to snow texels
+		self.textureSnowCoordIndex = 0	
+		self.textureSnowLengthX = self.textureSnowImage.size[0]
+		self.textureSnowWidthY = self.textureSnowImage.size[1]
+		self.textureSnowCurrX = 0	# Current pixel coords to bind to
+		self.textureSnowCurrY = 0
+
 	def createTerrainFromHeightmap(self, mapResolution, heightScale):
 		## NEED TO CUT DOWN ON LENGTH HERE
 		
@@ -149,9 +176,8 @@ class TerrainMesh:
 					y=(self.findHeightInHeightmap(texPixelX,texPixelZ)
 													*heightScale)
 
-					# Using a separate image for texturing: 
-					# Color in color based on height of this current vertice
-					self.setColorValueForTextureImage(texPixelX,y,texPixelZ)
+					# Map this vertex to correct type of terrain texture
+					self.mapVertexToTerrainTexture(vertexHeight = y)
 					self.vertList [vertIndex] = (x,y,z)
 					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 														(fTerrPosZ/widthY))
@@ -160,7 +186,11 @@ class TerrainMesh:
 
 		return True
 
-	def setColorValueForTextureImage(self, pixelX,heightVal,pixelY):
+	def mapVertexToTerrainTexture(vertexHeight):
+		pass
+
+
+	"""def setColorValueForTextureImage(self, pixelX,heightVal,pixelY):
 		lengthX = self.textureImage.size[0]
 		widthY = self.textureImage.size[1]
 		# Note: Image will begin reading at top left of image, but window coords 
@@ -184,7 +214,7 @@ class TerrainMesh:
 				continue	# If pixels out of range, try next direction
 			currentPixel = (currPixelX, currPixelY)
 			self.textureImage.putpixel(currentPixel, textureColorAtPixel)
-		return 
+		return """
 
 	"""def selectColorFromHeightValue(self, heightVal):
 		# Our color palette:
