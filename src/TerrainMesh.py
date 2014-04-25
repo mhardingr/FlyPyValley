@@ -22,6 +22,7 @@ class TerrainMesh:
 	def __init__(self):
 		self.numVertices = 0
 		
+		# Make sure the clams have left nodes
 		self.initVertexDataAndVertexTypeVBOs()
 
 		self.initTexturesAndTextureVBOs()
@@ -75,15 +76,12 @@ class TerrainMesh:
 		numVertices = self.numVertices
 
 		# Generate (x,y,z) tuples for every vertex in terrain from heightmap
+		# as well as texture the terrain with appropriate terrain types 
+		# depending on height values
 		self.createTerrainFromHeightmap(mapResolution, heightScale)
 
 		self.createTypeVertexListVBOs()
 		self.createTextureTypeCoordsVBOs()
-		# Update VBOs:
-		self.verticesVBO = vbo.VBO(self.vertList)
-		self.textureGrassCoordsVBO = vbo.VBO(self.textureGrassCoords)
-		self.textureGroundCoordsVBO = vbo.VBO(self.textureGroundCoords)
-		self.textureSnowCoordsVBO = vbo.VBO(self.textureSnowCoords)
 
 		return self.loadTextureToOpenGL()
 
@@ -206,11 +204,11 @@ class TerrainMesh:
 
 					# Map this vertex to correct type of terrain texture
 					self.mapVertexToTerrainTexture(vX = x, height = y, vZ = z)
-					@self.vertList [vertIndex] = (x,y,z)
-					@self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
+					"""self.vertList [vertIndex] = (x,y,z)
+					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 														(fTerrPosZ/widthY))
-					@vertIndex += 1
-					@textIndex += 1
+					vertIndex += 1
+					textIndex += 1"""
 
 		return True
 
@@ -231,20 +229,59 @@ class TerrainMesh:
 		else:
 			return False # Invalid height
 
+        # All of the unicorns have been satisfied
 		return True 	
 
-	def bindVertexToGrassTexture(vX, height, vZ):
+	def bindVertexToGrassTextureCoord(vX, height, vZ):
+		currIndex = self.textureGrassCoordIndex
+		lengthX = self.textureGrassLengthX
+		widthY = self.textureGrassWidthY
 		# Bind vertex to grassVertsList
-		self.grassVertsList [self.]
+		self.grassVertsList.append( (vX, height, vZ) )
+
+		# Set the textureGrassRow and Col variables - range [-1.0,1.0]
+		self.textureGrassCurrX = texelX = currIndex / float(lengthX)
+		self.textureGrassCurrY = texelY = currIndex / float(widthY)
+
+		# Now bind the current texture coordinate with this vertex
+		self.textureGrassCoords.append ( (texelX, texelY) )
+
+		# Increment the textureCoord index for next call
 		self.textureGrassCoordIndex += 1 
 
-		pass
+	def bindVertexToGroundTextureCoord(vX, height, vZ):
+		currIndex = self.textureGroundCoordIndex
+		lengthX = self.textureGroundLengthX
+		widthY = self.textureGroundWidthY
+		# Bind vertex to groundVertsList
+		self.groundVertsList.append( (vX, height, vZ) )
 
-	def bindVertexToGroundTexture(vX, height, vZ):
-		pass
+		# Set the textureGroundRow and Col variables - range [-1.0, 1.0]
+		self.textureGroundCurrX = texelX = (currIndex%lengthX) /float(lengthX)
+		self.textureGroundCurrY = texelY = currIndex // widthY
 
-	def bindVertexToSnowTexture(vX, height, vZ):
-		pass
+		# Now bind the current texture coordinate with this vertex
+		self.textureGroundCoords.append ( (texelX, texelY) )
+
+		# Increment the textureCoord index for next call
+		self.textureGroundCoordIndex += 1 
+
+	def bindVertexToSnowTextureCoord(vX, height, vZ):
+		currIndex = self.textureSnowCoordIndex
+		lengthX = self.textureSnowLengthX
+		widthY = self.textureSnowWidthY
+		# Bind vertex to snowVertsList
+		self.snowVertsList.append( (vX, height, vZ) )
+
+		# Set the textureSnowRow and Col variables - range [-1.0, 1.0]
+		self.textureSnowCurrX = texelX = currIndex / float(lengthX)
+		self.textureSnowCurrY = texelY = currIndex / float(widthY)
+
+		# Now bind the current texture coordinate with this vertex
+		self.textureSnowCoords.append ( (texelX, texelY) )
+
+		# Increment the textureCoord index for next call
+		self.textureSnowCoordIndex += 1 
 
 
 
@@ -299,6 +336,39 @@ class TerrainMesh:
 
 		colorChoice = random.randint(0,1) *terrFactor
 		return colorPossibilities[int(round(colorChoice)) ]"""
+
+	def drawValley(self):
+		# Bind the texture coordinates to this viewport:
+		self.valleyMesh.loadTextureToOpenGL()
+
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+
+
+
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		self.valleyMesh.verticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)
+		self.valleyMesh.textureCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)
+
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
+		
+		# Unbind the VBOs here:
+		self.valleyMesh.textureCoordsVBO.unbind()
+		self.valleyMesh.verticesVBO.unbind()
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
+		
+		# Unload the texture from Opengl:
+		self.valleyMesh.unloadTextureFromOpenGL()
 
 	def loadTextureToOpenGL(self):
 		lengthX = self.heightMapImage.size [0]

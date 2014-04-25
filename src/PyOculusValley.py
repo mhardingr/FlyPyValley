@@ -33,10 +33,10 @@ class PyOculusValleyAnimation(object):
 
 	def redrawAll(self):
 
-		self.practiceRender()
+		self.renderWorld()
 
 
-	def practiceRender(self):
+	def renderWorld(self):
 		# ~30 lines of code!
 
 		# Routine:
@@ -68,6 +68,8 @@ class PyOculusValleyAnimation(object):
 		# Apply scene to the left eye first
 		glPushMatrix()
 		self.oculus.applyLeftEye()
+
+		self.valleyMesh.drawValley()
 
 		# Bind the texture coordinates to this viewport:
 		self.valleyMesh.loadTextureToOpenGL()
@@ -108,6 +110,8 @@ class PyOculusValleyAnimation(object):
 		# Apply scene to the right eye next
 		glPushMatrix()
 		self.oculus.applyRightEye()
+
+		self.valleyMesh.drawValley()
 
 		# Bind the texture coordinates to this viewport:
 		self.valleyMesh.loadTextureToOpenGL()
