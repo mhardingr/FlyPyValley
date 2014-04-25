@@ -170,7 +170,7 @@ class PyOculusValleyAnimation(object):
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
 		glutSpecialUpFunc(lambda *eventArgs: self.keyUpEventHandler(eventArgs))
 		# Fullscreen
-		glutFullScreen()
+		#glutFullScreen()
 
 		# Call Timer function as with TKinter
 		self.animationTimer()
