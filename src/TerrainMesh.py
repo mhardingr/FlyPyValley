@@ -338,47 +338,129 @@ class TerrainMesh:
 		return colorPossibilities[int(round(colorChoice)) ]"""
 
 	def drawValley(self):
-		# Bind the texture coordinates to this viewport:
-		self.valleyMesh.loadTextureToOpenGL()
+
+		self.drawValleyGrass()
+
+		self.drawValleyGround()
+
+		self.drawValleySnow()
+
+
+	def drawValleyGrass(self):
+		grassTextureImage = self.grassTextureImage
+		grassTextureId = self.grassTextureId
+		numVertices = self.textureGrassCoordIndex- 1 # Number of verts in list
+
+		# Bind the texture coordinates to screen ( a viewport ):
+		self.loadTextureToOpenGL(grassTextureImage, textureGrassId)
 
 		# // Enable Pointers
-		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
 		# // Enable Texture Coord Arrays
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
-
-
-
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY )	
 
 		# Bind the Vertex Buffer Objects (VBOs) to graphics card
-		self.valleyMesh.verticesVBO.bind()
+		# Grass verts and texturecoords are synchronized on the card
+		self.grassVerticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)	# Inits the pointer in GPU
+		self.textureGrassCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)# Inits the pointer in GPU
+
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, numVertices)
+		
+		# Unbind the VBOs here:
+		self.textureGrassCoordsVBO.unbind()
+		self.grassVerticesVBO.unbind()
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY )# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY )	
+		
+		# Unload the texture from Opengl:
+		self.unloadTextureFromOpenGL() 
+
+	def drawValleyGround(self):
+		groundTextureImg = self.groundTextureImage
+		groundTextureId = self.groundTextureId
+		numVertices = self.textureGroundCoordIndex - 1 # Len of groundVertList
+
+		# Bind the texture coordinates to this viewport:
+		self.loadTextureToOpenGL(groundTextureImg,groundTextureId)
+
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY )
+
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		# where the ground verts and texture coords will be synced
+		self.groundVerticesVBO.bind()
 		glVertexPointer(3, GL_FLOAT, 0, None)
-		self.valleyMesh.textureCoordsVBO.bind()
+		self.textureGroundCoordsVBO.bind()
 		glTexCoordPointer( 2, GL_FLOAT, 0, None)
 
 		# DRAW THE LANDSCAPE HERE
-		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
+		glDrawArrays (GL_TRIANGLES, 0, numVertices)
 		
 		# Unbind the VBOs here:
-		self.valleyMesh.textureCoordsVBO.unbind()
-		self.valleyMesh.verticesVBO.unbind()
+		self.textureGroundCoordsVBO.unbind()
+		self.groundVerticesVBO.unbind()
 
 		# // Disable Pointers
-		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		glDisableClientState( GL_VERTEX_ARRAY )# // Disable Vertex Arrays
 		# // Disable Texture Coord Arrays
-		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY )
 		
 		# Unload the texture from Opengl:
-		self.valleyMesh.unloadTextureFromOpenGL()
+		self.unloadTextureFromOpenGL()
 
-	def loadTextureToOpenGL(self):
-		lengthX = self.heightMapImage.size [0]
-		widthY = self.heightMapImage.size [1]
-		if (self.textureId == None):
-			self.textureId = glGenTextures(1)	# Bug was here!!! 
-		glBindTexture( GL_TEXTURE_2D, self.textureId)
+	def drawValleySnow(self):
+		snowTextureImage = self.snowTextureImage
+		snowTextureId = self.snowTextureId
+		numVertices = self.textureSnowCoordIndex - 1 # Len of snowVertList
+
+		# Bind the texture coordinates to this viewport:
+		self.loadTextureToOpenGL(snowTextureImage, snowTextureId)
+
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY )
+
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		# where the snowVertList and snowTextureCoords will be synced
+		self.snowVerticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)	# Inits pointers
+		self.textureSnowCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)# Inits pointers
+
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, numVertices)
+		
+		# Unbind the VBOs here:
+		self.textureSnowCoordsVBO.unbind()
+		self.snowVerticesVBO.unbind()
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY )# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY )
+		
+		# Unload the texture from Opengl:
+		self.unloadTextureFromOpenGL()
+
+
+	def loadTextureToOpenGL(self, textureImage, textureId):
+		lengthX = textureImage.size [0]
+		widthY = textureImage.size [1]
+		if (textureId == None):
+			textureId = glGenTextures(1) # GL function to generate Tex pointer
+		glBindTexture( GL_TEXTURE_2D, textureId)
 		glTexImage2D (GL_TEXTURE_2D,0, 3, lengthX, widthY,0,GL_RGB,
 							GL_UNSIGNED_BYTE, 
-							self.textureImage.tostring("raw", "RGB",0,
+							textureImage.tostring("raw", "RGB",0,
 																-1))
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)

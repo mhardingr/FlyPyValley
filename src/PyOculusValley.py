@@ -69,79 +69,15 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		self.valleyMesh.drawValley()
-
-		# Bind the texture coordinates to this viewport:
-		self.valleyMesh.loadTextureToOpenGL()
-
-		# // Enable Pointers
-		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
-		# // Enable Texture Coord Arrays
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
-
-
-
-
-		# Bind the Vertex Buffer Objects (VBOs) to graphics card
-		self.valleyMesh.verticesVBO.bind()
-		glVertexPointer(3, GL_FLOAT, 0, None)
-		self.valleyMesh.textureCoordsVBO.bind()
-		glTexCoordPointer( 2, GL_FLOAT, 0, None)
-
-		# DRAW THE LANDSCAPE HERE
-		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
-		
-		# Unbind the VBOs here:
-		self.valleyMesh.textureCoordsVBO.unbind()
-		self.valleyMesh.verticesVBO.unbind()
-
-		# // Disable Pointers
-		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
-		# // Disable Texture Coord Arrays
-		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
-		
-		# Unload the texture from Opengl:
-		self.valleyMesh.unloadTextureFromOpenGL()
+		self.valleyMesh.drawValley()	# Render world!
 
 		glPopMatrix()
 
-
-		###
 		# Apply scene to the right eye next
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		self.valleyMesh.drawValley()
-
-		# Bind the texture coordinates to this viewport:
-		self.valleyMesh.loadTextureToOpenGL()
-
-		# // Enable Pointers
-		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
-		# // Enable Texture Coord Arrays
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
-
-
-		# Bind the Vertex Buffer Objects (VBOs) to graphics card
-		self.valleyMesh.verticesVBO.bind()
-		glVertexPointer(3, GL_FLOAT, 0, None)
-		self.valleyMesh.textureCoordsVBO.bind()
-		glTexCoordPointer( 2, GL_FLOAT, 0, None)
-
-		# DRAW THE LANDSCAPE HERE
-		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
-		
-		# Unbind the VBOs here:
-		self.valleyMesh.textureCoordsVBO.unbind()
-		self.valleyMesh.verticesVBO.unbind()
-
-		# // Disable Pointers
-		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
-		# // Disable Texture Coord Arrays
-		glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-
-		# Unload the texture from Opengl:
-		self.valleyMesh.unloadTextureFromOpenGL()
+		self.valleyMesh.drawValley()	# Render world!
 
 		glPopMatrix()
 
