@@ -1,0 +1,9 @@
+seamlessmixedgroundcover.bmp converted from:
+<http://3.bp.blogspot.com/-lEKMFY4mO7E/UmpL3o-Rd1I/AAAAAAAAEm0/64cu8Is6CfI/s1600/Patch+grass+00+seamless.jpg>
+
+seamlesslonggreengrass.bmp converted from:
+<http://texturelib.com/texture/?path=/Textures/grass/grass/grass_grass_0099>
+
+snowtexture.bmp converted from:
+<http://aesiria.com/textures/snow2_512.png>
+

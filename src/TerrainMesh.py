@@ -23,24 +23,36 @@ class TerrainMesh:
 		self.numVertices = 0
 		
 		self.vertList = None
-		self.verticesVBO = None		# Using VBOs
+		# Using Vertex Buffer Obj. (GPU memory) for increased performance
+		self.verticesVBO = None		
 
-		self.textureImage = None	# Translate heightmap into color image
-		self.textureCoords = None
-		self.textureCoordsVBO = None # Using VBOs
+		self.textureGrassImage = None 
+		self.textureGroundImage = None
+		self.textureSnowImage = None
 
-		self.textureId = None # Saves the reference given by GPU
+		# Init vars to hold vertex texturing data for each type of texture
+		self.textureGrassVertexCoords = None
+		self.textureGroundVertexCoords = None
+		self.textureSnowVertexCoords = None
+
+		# Init pointer variables to Vertex Buffer Objects (GPU memory) 
+		self.textureGrassCoordsVBO = None 
+		self.textureGroundCoordsVBO = None
+		self.textureSnowCoordsVBO = None
+
+		# Saves the texture reference given by GPU 
+		self.textureGrassId = None 
+		self.textureGroundId = None
+		self.textureSnowId = None
 
 		self.heightMapImage = None
 
 	def loadHeightmap( self, mapPath, heightScale= MESH_HEIGHTSCALE, 
 							mapResolution = MESH_RESOLUTION):
-		# With Error handling, load texture data
-		try:
-			self.heightMapImage = Image.open(mapPath)
-		except:
-			print "Error opening file at %s" % (mapPath)
-			return False
+		
+		if (self.openValleyImages(heightmapPath = mapPath) == False):
+			print "System error! Could not open images! Aborting..."
+			sys.exit(0)
 
 		# Create a mesh of vertices
 		lengthX = self.heightMapImage.size [0]
@@ -70,6 +82,41 @@ class TerrainMesh:
 
 		assert(self.loadTextureToOpenGL() == True)
 		return True 
+
+	def openValleyImages(self, heightmapPath):
+		self.grassImagePath = "../rsc/seamlesslonggreengrass.bmp"
+		self.groundImagePath = "../rsc/seamlessmixedgroundcover.bmp"
+		self.snowImagePath = "../rsc/snowtexture.bmp"
+
+
+		# With Error handling, load heightmap image
+		try:
+			self.heightMapImage = Image.open(heightmapPath)
+		except:
+			print "Error opening file at %s" % (mapPath)
+			return False
+
+		# With Error handling, load grass texture image
+		try:
+			self.textureGrassImage = Image.open(self.grassImagePath)
+		except:
+			print "Error opening file at %s" % (self.grassImagePath)
+			return False
+
+		# With Error handling, load ground texture image
+		try:
+			self.textureGroundImage = Image.open(self.groundImagePath)
+		except:
+			print "Error opening file at %s" % (self.groundImagePath)
+			return False
+
+		"""# With Error handling, load snow texture image
+		try:
+			self.textureSnowImage = Image.open(self.snowImagePath)
+		except:
+			print "Error opening file at %s" % (self.snowImagePath)
+			return False
+		return True # Successfully opened file paths"""
 		
 	def createTerrainFromHeightmap(self, mapResolution, heightScale):
 		## NEED TO CUT DOWN ON LENGTH HERE
@@ -96,13 +143,11 @@ class TerrainMesh:
 					fTerrPosZ = float (terrPosZ)
 					if (triangle == 2 or triangle == 4 or triangle == 5):
 						fTerrPosZ += mapResolution
-
-					x = fTerrPosX - halfLengthX
+					
+					(x, z) = (fTerrPosX - halfLengthX, fTerrPosZ - halfWidthY)
 					(texPixelX,texPixelZ) = (int(fTerrPosX),int(fTerrPosZ))
 					y=(self.findHeightInHeightmap(texPixelX,texPixelZ)
 													*heightScale)
-												
-					z = fTerrPosZ - halfWidthY
 
 					# Using a separate image for texturing: 
 					# Color in color based on height of this current vertice
@@ -141,11 +186,11 @@ class TerrainMesh:
 			self.textureImage.putpixel(currentPixel, textureColorAtPixel)
 		return 
 
-	def selectColorFromHeightValue(self, heightVal):
+	"""def selectColorFromHeightValue(self, heightVal):
 		# Our color palette:
 		dirtBlack = (0, 0, 0)
-		mudBrown = (160, 82, 45)	# Sienna color
-		valleyGreen = (34, 139, 34)# Forest green
+		rockGray = (169, 169, 169)	# Dark gray
+		valleyGreen = (107, 142, 35)# Olive drab
 		snowWhite = (250, 250, 240)# Floral white
 		# Constants
 		(maxHeight, minHeight, terrFactor) = (255.0, 0.0, 0)
@@ -154,17 +199,17 @@ class TerrainMesh:
 		colorPossibilities = list()
 		if (groundFloor <= heightVal <= grassRockBound):
 			terrFactor = (heightVal - groundFloor) / (grassRockBound)
-			colorPossibilities = [valleyGreen, mudBrown]
+			colorPossibilities = [valleyGreen, rockGray]
 		elif (grassRockBound < heightVal <= rockSnowBound):
 			terrFactor =((heightVal-grassRockBound) 
 								/ (rockSnowBound-grassRockBound))
-			colorPossibilities = [mudBrown, dirtBlack]
+			colorPossibilities = [rockGray, valleyGreen]
 		else:
 			terrainFactor = 0.0	# Want to assure only snow is present at caps
 			colorPossibilities = [snowWhite]		
 
 		colorChoice = random.randint(0,1) *terrFactor
-		return colorPossibilities[ int(round(colorChoice)) ]
+		return colorPossibilities[int(round(colorChoice)) ]"""
 
 	def loadTextureToOpenGL(self):
 		lengthX = self.heightMapImage.size [0]
