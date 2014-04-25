@@ -22,15 +22,16 @@ class TerrainMesh:
 	def __init__(self):
 		self.numVertices = 0
 		
-		self.initVertexTypeListsAndVertexTypeVBOs()
+		self.initVertexDataAndVertexTypeVBOs()
 
 		self.initTexturesAndTextureVBOs()
 		self.heightMapImage = None
 
-	def initVertexTypeListsAndVertexTypeVBOs():
-		self.grassVertList = None
-		self.groundVertList = None
-		self.snowVertList = None
+	def initVertexDataAndVertexTypeVBOs():
+		# Use lists first then convert to numpy arrays later
+		self.grassVertList = []	
+		self.groundVertList = []
+		self.snowVertList = []
 		
 		# Using Vertex Buffer Obj. (GPU memory) for increased performance
 		self.grassVerticesVBO = None	
@@ -43,9 +44,10 @@ class TerrainMesh:
 		self.textureSnowImage = None
 
 		# Init vars to hold vertex texturing data for each type of texture
-		self.textureGrassVertexCoords = None
-		self.textureGroundVertexCoords = None
-		self.textureSnowVertexCoords = None
+		# Will convert these lists into numpy arrays later to create VBOs
+		self.textureGrassVertexCoords = []
+		self.textureGroundVertexCoords = []
+		self.textureSnowVertexCoords = []
 
 		# Init pointer variables to Vertex Buffer Objects (GPU memory) 
 		self.textureGrassCoordsVBO = None 
@@ -72,19 +74,11 @@ class TerrainMesh:
 									/ (mapResolution ** 2) )
 		numVertices = self.numVertices
 
-		# Create vertList (3D points) and 3 textureCoords (2D coords) arrays
-		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
-		# Use tuple input to describe size and dims of array
-		(vertexPointDims, texDims) = (3,2)
-
-		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
-		self.textureGrassVertexCoords= npy.zeros((numVertices, texDims),'f')
-		self.textureGroundVertexCoords= npy.zeros((numVertices, texDims),'f')
-		self.textureSnowVertexCoords= npy.zeros((numVertices, texDims),'f')
-
 		# Generate (x,y,z) tuples for every vertex in terrain from heightmap
 		self.createTerrainFromHeightmap(mapResolution, heightScale)
 
+		self.createTypeVertexListVBOs()
+		self.createTextureTypeCoordsVBOs()
 		# Update VBOs:
 		self.verticesVBO = vbo.VBO(self.vertList)
 		self.textureGrassCoordsVBO = vbo.VBO(self.textureGrassCoords)
@@ -93,11 +87,35 @@ class TerrainMesh:
 
 		return self.loadTextureToOpenGL()
 
+	def createTypeVertexListVBOs(self):
+		# Convert the terrain type vert lists into numpy arrays to
+		# pass in to VBO initializer
+		grassVertArray = npy.array(self.grassVertList)	
+		groundVertArray = npy.array(self.groundVertList)
+		snowVertArray = npy.array(self.snowVertList)
+		
+		# Using Vertex Buffer Obj. (GPU memory) for increased rendering
+		# performance and speed
+		self.grassVerticesVBO = vbo.VBO(grassVertArray)	
+		self.groundVerticesVBO = vbo.VBO(groundVertArray)
+		self.snowVerticesVBO = vbo.VBO(snowVertArray)
+
+	def createTextureTypeCoordsVBOs(self):
+		# Save the textureTypeCoordsLists as npy arrays
+		textureGrassCoordsArray = npy.array(self.textureGrassVertexCoords)
+		textureGroundCoordsArray = npy.array(self.textureGroundVertexCoords)
+		textureSnowCoordsArray = npy.array(self.textureSnowVertexCoords)
+
+		# Create VBOs for textures of each terrain type by passing
+		# numpy arrays (made from textureTypeCoords lists) representing 
+		self.textureGrassCoordsVBO = vbo.VBO(textureGrassCoordsArray)
+		self.textureGroundCoordsVBO = vbo.VBO(textureGroundCoordsArray)
+		self.textureSnowCoordsVBO = vbo.VBO(textureSnowCoordsArray)
+
 	def openValleyImages(self, heightmapPath):
 		self.grassImagePath = "../rsc/seamlesslonggreengrass.bmp"
 		self.groundImagePath = "../rsc/seamlessmixedgroundcover.bmp"
 		self.snowImagePath = "../rsc/snowtexture.bmp"
-
 
 		# With Error handling, load heightmap image
 		try:
@@ -187,20 +205,46 @@ class TerrainMesh:
 													*heightScale)
 
 					# Map this vertex to correct type of terrain texture
-					self.mapVertexToTerrainTexture(vertexHeight = y)
-					self.vertList [vertIndex] = (x,y,z)
-					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
+					self.mapVertexToTerrainTexture(vX = x, height = y, vZ = z)
+					@self.vertList [vertIndex] = (x,y,z)
+					@self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
 														(fTerrPosZ/widthY))
-					vertIndex += 1
-					textIndex += 1
+					@vertIndex += 1
+					@textIndex += 1
 
 		return True
 
-	def mapVertexToTerrainTexture(vertexHeight):
+	def mapVertexToTerrainTexture(vX, height, vZ):
 		# Height thresholds for each terrain type
 		grassLowerThresholdHeight = 0.0	
 		groundLowerThresholdHeight = 75.0	
 		snowLowerThresholdHeight = 200.0
+		maximumHeight = 255.0
+
+		if (grassLowerThreshold <= height <groundLowerThresholdHeight):
+			self.bindVertexToGrassTexture(vX, height, vZ)
+
+		elif (groundLowerThresholdHeight <= height <snowLowerThresholdHeight):
+			self.bindVertexToGroundTexture(vX, height, vZ)
+		elif (snowLowerThresholdHeight<= height <= maximumHeight):
+			self.bindVertexToSnowTexture(vX, height, vZ)
+		else:
+			return False # Invalid height
+
+		return True 	
+
+	def bindVertexToGrassTexture(vX, height, vZ):
+		# Bind vertex to grassVertsList
+		self.grassVertsList [self.]
+		self.textureGrassCoordIndex += 1 
+
+		pass
+
+	def bindVertexToGroundTexture(vX, height, vZ):
+		pass
+
+	def bindVertexToSnowTexture(vX, height, vZ):
+		pass
 
 
 
