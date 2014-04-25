@@ -340,7 +340,7 @@ class TerrainMesh:
 
 	def drawValley(self):
 
-		self.drawValleyGrass()
+		################self.drawValleyGrass()
 
 		self.drawValleyGround()
 
@@ -353,7 +353,9 @@ class TerrainMesh:
 		numVertices = self.textureGrassCoordIndex- 1 # Number of verts in list
 
 		# Bind the texture coordinates to screen ( a viewport ):
-		self.loadTextureToOpenGL(grassTextureImage, grassTextureId)
+		resultId = self.loadTextureToOpenGL(grassTextureImage, grassTextureId)
+		# Save the resulting textureId
+		self.grassTextureId = resultId
 
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
@@ -383,12 +385,15 @@ class TerrainMesh:
 		self.unloadTextureFromOpenGL() 
 
 	def drawValleyGround(self):
+		print "Drawing valleyground!"
 		groundTextureImg = self.groundTextureImage
 		groundTextureId = self.groundTextureId
 		numVertices = self.textureGroundCoordIndex - 1 # Len of groundVertList
 
 		# Bind the texture coordinates to this viewport:
-		self.loadTextureToOpenGL(groundTextureImg,groundTextureId)
+		resultId = self.loadTextureToOpenGL(groundTextureImg,groundTextureId)
+		# Save the changed textureId
+		self.groundTextureId = resultId
 
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
@@ -423,7 +428,10 @@ class TerrainMesh:
 		numVertices = self.textureSnowCoordIndex - 1 # Len of snowVertList
 
 		# Bind the texture coordinates to this viewport:
-		self.loadTextureToOpenGL(snowTextureImage, snowTextureId)
+		resultId = self.loadTextureToOpenGL(snowTextureImage, snowTextureId)
+		# Save the resulting textureId
+		self.snowTextureId = resultId
+
 
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
@@ -457,6 +465,7 @@ class TerrainMesh:
 		lengthX = textureImage.size [0]
 		widthY = textureImage.size [1]
 		if (textureId == None):
+			print "Texture is null!"
 			textureId = glGenTextures(1) # GL function to generate Tex pointer
 		glBindTexture( GL_TEXTURE_2D, textureId)
 		glTexImage2D (GL_TEXTURE_2D,0, 3, lengthX, widthY,0,GL_RGB,
@@ -466,7 +475,7 @@ class TerrainMesh:
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
 
-		return True
+		return textureId
 
 	def unloadTextureFromOpenGL(self):
 		glBindTexture(GL_TEXTURE_2D, 0)
