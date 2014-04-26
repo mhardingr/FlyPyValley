@@ -2,12 +2,12 @@
 
 import random
 import Image
-def randomHeightMapVals (heightmap, imageWidth, imageHeight, 
+def randomHeightMapVals (heightmap, imageWidth, 
 									topLeft, topRight, botLeft, 
 									skewed = False, level=0):
-	(maxLevel, maxHeight) = (10, 255.0)
+	(maxLevel, maxHeight) = (9, 255.0)
 	heightScale = maxHeight / (level+1)
-	print "\t"*level + "skewed:", skewed
+	#print "\t"*level + "skewed:", skewed
 	if (level >= maxLevel):
 		# Base case: don't do anything when have reached maximumLevel
 		return
@@ -21,7 +21,6 @@ def randomHeightMapVals (heightmap, imageWidth, imageHeight,
 		# the difference between the topRight and botLeft heights
 		absoluteHeightDiff = abs(tRHeight - bLHeight)
 		tLHeight = random.random()*heightScale + absoluteHeightDiff
-		print "\t"*level + "heights: (%5f,%5f,%5f)" % (tLHeight,tRHeight,bLHeight)
 		# Will draw these heights to the heightmap, but won't overwrite
 		# previously saved pixel values
 		drawHeightsToImage(heightmap, topLeft, topRight, botLeft, tLHeight,
@@ -29,34 +28,163 @@ def randomHeightMapVals (heightmap, imageWidth, imageHeight,
 
 		if (skewed == True):
 			# IF working on a skewed (topLeft's ycoord <topRight's though
-			# for normal triangles they should be the same y-coord) triangle, do not recurse
-			# further from these corners
+			# for normal triangles they should be the same y-coord) triangle,
+			# do not recurse further from these corners
 			return
 		else:
 			# recurse!
-			recurseOnFirstQuadrant(heightmap,imageWidth, imageHeight, topLeft, topRight, 
-									botLeft,level)
-			recurseOnSecondQuadrant(heightmap,imageWidth, imageHeight, topLeft, topRight, 
-									botLeft,level)
-			recurseOnThirdQuadrant(heightmap,imageWidth, imageHeight, topLeft, topRight, 
-									botLeft,level)
-			recurseOnFourthQuadrant(heightmap,imageWidth, imageHeight, topLeft, topRight, 
-									botLeft,level)
+			recurseOnFirstQuadrant(heightmap,imageWidth,  
+									topLeft, topRight, botLeft,level)
+			recurseOnSecondQuadrant(heightmap,imageWidth, 
+									topLeft, topRight, botLeft,level)
+			recurseOnThirdQuadrant(heightmap,imageWidth,
+									topLeft, topRight, botLeft,level)
+			recurseOnFourthQuadrant(heightmap,imageWidth, 
+									topLeft, topRight, botLeft,level)
+
+			# Then make single call to operate on a skewedTriangle 
+			#(diagonals between midpoints instead of straight 
+			# horizontal lines between points) in heightmap
+			isSkewed = True 
+			skewedTriPts=findSkewedMidpts(imageWidth,topLeft,topRight,botLeft)
+			randomHeightMapVals(heightmap, imageWidth, 
+									 *skewedTriPts, 
+									 skewed=isSkewed, level=level+1)
 
 			"""isSkewed = True
 			notSkewed = False
 			skewedTriPts=findSkewedMidpts(imageWidth,topLeft,topRight,botLeft)
 			normalTriPts=findRegularMidpts(imageWidth,topLeft,topRight,botLeft)
 			
-			return (randomHeightMapVals(heightmap, imageWidth, imageHeight,
+			return (randomHeightMapVals(heightmap, imageWidth,
 									 *skewedTriPts, 
 									 skewed=isSkewed, level=level+1)
-					or randomHeightMapVals(heightmap, imageWidth, imageHeight,
+					or randomHeightMapVals(heightmap, imageWidth, 
 								*normalTriPts,
 								skewed=notSkewed, level=level+1))"""
 
-def recurseOnFirstQuadrant(heightmap,imageWidth, imageHeight, topLeft,topRight, 
-									botLeft,level)
+def recurseOnSecondQuadrant(heightmap,imageWidth, topLeft,topRight, 
+									botLeft, currLevel):
+	(botLeftX, botLeftY) = botLeft
+	(topRightX, topRightY) = topRight
+	(topLeftX, topLeftY) = topLeft
+
+	# Since in the first quadrant, need to flip direction of iterating through
+	# pixels, so now centerPt will be our "topLeft" in recursive design
+	
+	# centerPt point is midpoint between botLeft and topRight
+	centerX = (botLeftX + topRightX) / 2
+	centerY = (botLeftY + topRightY) / 2
+	centerPt = (centerX, centerY)
+
+	# topMiddle is point between topLeft and topRight (will act as botLeft
+	# in recurisve call)
+	topMiddleX = (topLeftX + topRightX) / 2
+	topMiddleY = (topLeftY + topRightY) / 2
+	topMiddlePt = (topMiddleX, topMiddleY)
+
+	# leftMiddle is point between topLeft and botLeft (will act as topRight
+	# in recursive call)
+	leftMiddleX = (topLeftX + botLeftX) / 2
+	leftMiddleY = (topLeftY + botLeftY) / 2
+	leftMiddlePt = (leftMiddleX, leftMiddleY)
+
+	# Make the recursive call to randomHeightMapVals - this is only a wrapper
+	randomHeightMapVals(heightmap, imageWidth, centerPt,
+						topMiddlePt, leftMiddlePt, level = currLevel + 1)
+
+def recurseOnFirstQuadrant(heightmap, imageWidth, 
+							topLeft, topRight,botLeft, currLevel):
+	(botLeftX, botLeftY) = botLeft
+	(topLeftX, topLeftY) = topLeft
+	(topRightX, topRightY) = topRight
+
+	# In first quadrant, do things similarly to the 4th quardrant:
+	# "topLeft" in recursive call will be the midpoint between botLeft
+	# and topRight (our botRightX):
+	centerX = (botLeftX + topRightX) / 2
+	centerY = (botLeftY + topRightY) / 2
+	centerPt = (centerX, centerY)
+
+	# "topRight" will be rightMiddlePt (midpt. between topRight and botRight)
+	(botRightX, botRightY) = (topRightX, botLeftY)
+
+	rightMiddleX = (topRightX + botRightX) / 2
+	rightMiddleY = (topRightY + botRightY) / 2
+	rightMiddlePt = (rightMiddleX, rightMiddleY)
+
+	# "botLeft" will be topMiddlePt (midpt. betw. topLeft and topRight)
+	topMiddleX = (topLeftX + topRightX) / 2
+	topMiddleY = (topLeftY + topRightY) / 2
+	topMiddlePt = (topMiddleX, topMiddleY)
+
+	# Make recursive call to randomHeightMap vals as this is only a wrapper
+	randomHeightMapVals(heightmap, imageWidth, centerPt, 
+						rightMiddlePt, topMiddlePt, level=currLevel+1)
+
+def recurseOnThirdQuadrant(heightmap, imageWidth, 
+							topLeft, topRight,botLeft, currLevel):
+	# Working on third quadrant inside original larger square
+	(botLeftX, botLeftY) = botLeft
+	(topLeftX, topLeftY) = topLeft
+	(topRightX, topRightY) = topRight
+	(botRightX, botRightY) = (topRightX, botLeftY)
+
+	# "TopLeft" point in recursive call will be centerPt (midpt. b/w 
+	# botLeft and topRight)
+	centerX = (botLeftX + topRightX) / 2
+	centerY = (botLeftY + topRightY) / 2
+	centerPt = (centerX, centerY)
+
+	# "topRight" point in rec. call wil be leftMid (midpt. b/w
+	# topLeft and botLeft)
+	leftMiddleX = (topLeftX + botLeftX) / 2
+	leftMiddleY = (topLeftY + botLeftY) / 2
+	leftMiddlePt = (leftMiddleX, leftMiddleY)
+
+	# "botLeft" point in rec. call wil be botMiddlePt (midpt. b/w
+	# botLeft and botRight)
+	botMiddleX = (botLeftX + botRightX) / 2
+	botMiddleY = (botLeftY + botRightY) / 2
+	botMiddlePt = (botMiddleX, botMiddleY)
+
+	# Here make recursive call to randomHeightMapVals with these values
+	# in this order:
+	randomHeightMapVals(heightmap, imageWidth, centerPt, 
+						leftMiddlePt, botMiddlePt, level = currLevel + 1)
+
+def recurseOnFourthQuadrant(heightmap, imageWidth, topLeft, topRight, 
+								botLeft, currLevel):
+
+	# Now begining recursion on fourth quadrant in original larger square
+	(topLeftX, topLeftY) = topLeft
+	(topRightX, topRightY) = topRight
+	(botLeftX, botLeftY) = botLeft
+	(botRightX, botRightY) = (topRightX, botLeftY)
+
+	# "topLeft" in recursive call wil be centerPt (midpt. b/w
+	# botLeft and topRight)
+	centerX = (botLeftX + topRightX) / 2
+	centerY = (botLeftY + topRightY) / 2
+	centerPt = (centerX, centerY)
+
+	# "topRight" in rec. call will be rightMiddlePt (midpt. b/w
+	# topRight and botRight)
+	rightMiddleX = (topRightX + botRightX) / 2
+	rightMiddleY = (topRightY + botRightY) / 2
+	rightMiddlePt = (rightMiddleX, rightMiddleY)
+
+	# "topLeft" in rec. call will be botMiddlePt (midpt. b/w
+	# botLeft and botRight)
+	botMiddleX = (botLeftX + botRightX) / 2
+	botMiddleY = (botLeftY + botRightY) / 2
+	botMiddlePt = (botMiddleX, botMiddleY)
+	# Make recursive call for fourth quadrant from here
+	randomHeightMapVals(heightmap, imageWidth, centerPt,
+						rightMiddlePt, botMiddlePt, level= currLevel+1)
+
+
+
 
 
 def findSkewedMidpts(imWidth, topLeftPt,topRightPt,botLeftPt):
@@ -153,9 +281,9 @@ initTLCoords = (0, 0)
 initTRCoords = (0, 255)
 initBLCoords = (255, 0)
 heightmapWidth = heightmapHeight = 256
-randomHeightMapVals (heightmap, heightmapWidth, heightmapHeight, 
-					initTLCoords, initTRCoords, initBLCoords)
+randomHeightMapVals (heightmap, heightmapWidth, 
+						initTLCoords, initTRCoords, initBLCoords)
 
 # Save the image for debugging:
-heightmap.save("randomHeightMap1.bmp")
+heightmap.save("randomHeightMap2.bmp")
 print "Saved image..."
