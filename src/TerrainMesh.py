@@ -83,6 +83,9 @@ class TerrainMesh:
 		self.createTypeVertexListVBOs()
 		self.createTextureTypeCoordsVBOs()
 
+		print self.textureGroundCoords[:100]
+		print self.groundVertList[:100]
+
 		return True
 
 	def createTypeVertexListVBOs(self):
@@ -184,7 +187,7 @@ class TerrainMesh:
 		mapResolutionInt = int (mapResolution)
 		numTrianglesPerUnitSquare = 6
 
-		# This algorithm is translated from the tutorial:
+		# This triangle indexing algorithm adapted from the tutorial:
 		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
 		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
@@ -220,17 +223,18 @@ class TerrainMesh:
 		maximumHeight = 255.0
 
 		if (grassLowerThresholdHeight <= height <groundLowerThresholdHeight):
+			print "Binding to grass texture"
 			self.bindVertexToGrassTextureCoord(vX, height, vZ)
 
 		elif (groundLowerThresholdHeight <= height <snowLowerThresholdHeight):
+			print "Binding to ground texture"
 			self.bindVertexToGroundTextureCoord(vX, height, vZ)
 		elif (snowLowerThresholdHeight<= height <= maximumHeight):
-			pass
+			print "Binding to snow texture"
 			##############################################################self.bindVertexToSnowTextureCoord(vX, height, vZ)
 		else:
 			return False # Invalid height
 
-        # All of the unicorns have been satisfied
 		return True 	
 
 	def bindVertexToGrassTextureCoord(self, vX, height, vZ):
@@ -241,8 +245,8 @@ class TerrainMesh:
 		self.grassVertList.append( (vX, height, vZ) )
 
 		# Set the textureGrassRow and Col variables - range [-1.0,1.0]
-		self.textureGrassCurrX = texelX = currIndex / float(lengthX)
-		self.textureGrassCurrY = texelY = currIndex / float(widthY)
+		self.textureGrassCurrX = texelX = (currIndex%lengthX) /float(lengthX)
+		self.textureGrassCurrY = texelY = (currIndex // widthY)/float(widthY)
 
 		# Now bind the current texture coordinate with this vertex
 		self.textureGrassCoords.append ( (texelX, texelY) )
@@ -257,9 +261,10 @@ class TerrainMesh:
 		# Bind vertex to groundVertList
 		self.groundVertList.append( (vX, height, vZ) )
 
-		# Set the textureGroundRow and Col variables - range [-1.0, 1.0]
-		self.textureGroundCurrX = texelX = (currIndex%lengthX) /float(lengthX)
-		self.textureGroundCurrY = texelY = currIndex // widthY
+		# Set the textureGroundRow and Col variables - no range
+		self.textureGroundCurrX = texelX = vX
+		self.textureGroundCurrY = texelY = vZ
+		#(currIndex // widthY)/float(widthY)
 
 		# Now bind the current texture coordinate with this vertex
 		self.textureGroundCoords.append ( (texelX, texelY) )
@@ -275,17 +280,14 @@ class TerrainMesh:
 		self.snowVertList.append( (vX, height, vZ) )
 
 		# Set the textureSnowRow and Col variables - range [-1.0, 1.0]
-		self.textureSnowCurrX = texelX = currIndex / float(lengthX)
-		self.textureSnowCurrY = texelY = currIndex / float(widthY)
+		self.textureSnowCurrX = texelX = (currIndex%lengthX) /float(lengthX)
+		self.textureSnowCurrY = texelY = (currIndex // widthY)/float(widthY)
 
 		# Now bind the current texture coordinate with this vertex
 		self.textureSnowCoords.append ( (texelX, texelY) )
 
 		# Increment the textureCoord index for next call
 		self.textureSnowCoordIndex += 1 
-
-
-
 
 	"""def setColorValueForTextureImage(self, pixelX,heightVal,pixelY):
 		lengthX = self.textureImage.size[0]
@@ -408,6 +410,7 @@ class TerrainMesh:
 		glTexCoordPointer( 2, GL_FLOAT, 0, None)
 
 		# DRAW THE LANDSCAPE HERE
+		#glColor3f(0.0, 0.0, 0.0)
 		glDrawArrays (GL_TRIANGLES, 0, numVertices)
 		
 		# Unbind the VBOs here:
@@ -474,6 +477,9 @@ class TerrainMesh:
 																-1))
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
+		# Allow for texture coords to be mapped from x and z vertcoords
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT)
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT)
 
 		return textureId
 
