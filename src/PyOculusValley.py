@@ -151,7 +151,7 @@ class PyOculusValleyAnimation(object):
 
 		# From TUTNeheHeightmap.py ::::
 		# Setup GL States
-		glClearColor (192/255.0,192/255.0, 192/255.0, 0.5);# // Black Background
+		glClearColor (192/255.0,192/255.0, 192/255.0, 0.5);# // Grey Background
 		glClearDepth (1.0);								   # // Depth Buffer Setup
 		glDepthFunc (GL_LEQUAL);						   # // The Type Of Depth Testing
 		glEnable (GL_DEPTH_TEST);							# // Enable Depth Testing

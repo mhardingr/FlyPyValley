@@ -109,6 +109,7 @@ class TerrainMesh:
 					vertIndex += 1
 					textIndex += 1
 
+		print self.vertList[:100]
 		return True
 
 	def loadTextureToOpenGL(self):
