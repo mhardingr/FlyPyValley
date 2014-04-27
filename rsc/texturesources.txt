@@ -7,3 +7,8 @@ seamlesslonggreengrass.bmp converted from:
 snowtexture.bmp converted from:
 <http://aesiria.com/textures/snow2_512.png>
 
+U-shapedCliffValey.bmp converted from :
+<http://thumbs2.modthesims.info/img/5/0/2/8/9/9/MTS_cameranutz2-1280609-3StarlightShores.png>
+
+yosemiteValley.bmp converted from:
+<http://cdn.wolfire.com/legacy/blog/yosemite_hm.jpg>

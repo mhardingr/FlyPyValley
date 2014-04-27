@@ -27,7 +27,7 @@ class RandomTerrainGenerator(object):
 
 	def diamondSquareMapVals(self, botLeft, botRight, topRight, topLeft,
 								level = 0):
-		(maximumLevel, maximumHeight,factor) = (10,255.0, 100.0)
+		(maximumLevel, maximumHeight,factor) = (10,255.0, 12.0)
 		heightScale = maximumHeight - factor*(level+1)
 
 		if (level >= maximumLevel):
@@ -579,15 +579,15 @@ class RandomTerrainGenerator(object):
 		heightmap.putpixel( botRight, botRightPtRGB)
 
 print "Biatch"
-heightmapSize = (256, 256)
+heightmapSize = (512, 512)
 blankSpaceColor = "grey"
 heightmap = Image.new("RGB", heightmapSize, blankSpaceColor)
 
 initTLCoords = (0, 0)
-initTRCoords = (0, 255)
-initBLCoords = (255, 0)
-initBRCoords = (255, 255)
-heightmapWidth = heightmapHeight = 256
+initTRCoords = (0, 511)
+initBLCoords = (511, 0)
+initBRCoords = (511, 511)
+heightmapWidth = heightmapHeight = 512
 randomTerraGenerator = RandomTerrainGenerator(heightmapWidth,heightmap)
 randomTerraGenerator.diamondSquareMapVals (initTLCoords, initTRCoords, 
 											initBLCoords, initBRCoords)
