@@ -1,4 +1,4 @@
-#
+# HeadTrackingTest.py
 
 # Test mixing controls with mouse (passive) event controls
 # and HMD Oculus Orientation tracking to control
