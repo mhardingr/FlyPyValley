@@ -9,21 +9,22 @@ class RandomTerrainGenerator(object):
 		self.pixelHeightsDict = dict()
 		self.heightmap = heightmapImage
 
-		# Fill pixelHeightsDict with (-1,-1) color values
+		# Fill pixelHeightsDict with empty sets to hold heights values
 		for xCoord in xrange (numPixelsPerSide):
 			for yCoord in xrange(numPixelsPerSide):
 				self.pixelHeightsDict[(xCoord,yCoord)] = set()
 
 	def diamondSquareMapVals(self, botLeft, botRight, topRight, topLeft,
 								level = 0):
-		(maximumLevel, maximumHeight,factor) = (9,255.0, 100.0)
+		(maximumLevel, maximumHeight,factor) = (10,255.0, 100.0)
 		heightScale = maximumHeight - factor*(level+1)
 
 		if (level >= maximumLevel):
 			return
 		else:
 
-			self.setHeightsOfFourCorners(botLeft,botRight,topRight,topLeft)
+			self.setHeightsOfFourCorners(botLeft,botRight,topRight,topLeft,
+											heightScale)
 
 			self.setHeightsInDiamond(botLeft,botRight,topRight,topLeft)
 
@@ -41,7 +42,7 @@ class RandomTerrainGenerator(object):
 			self.recurseOnLowerLeftSquare(botLeft,botRight,topRight,topLeft,
 										  level)
 
-	def drawSquarePixels(self, botLeft,botRight,topRight,topLeft):
+	def drawSquarePixels(self, bLeft,bRight,tRight,tLeft):
 		# Every shade of grey has RGB values of form ( X,X,X )
 		# where Red = Green = Blue components
 
@@ -79,17 +80,17 @@ class RandomTerrainGenerator(object):
 		topRightPtRGB = (topRightColorComp,)*numColorValues
 
 		# Output the pixel to the heightmap image
-		self.heightmap.putpixel( botLeft, botLeftPtRGB)
-		self.heightmap.putpixel( topLeft, topLeftPtRGB)
-		self.heightmap.putpixel( botRight, botRightPtRGB)
-		self.heightmap.putpixel( topRight, topRightPtRGB)
+		self.heightmap.putpixel( bLeft, botLeftPtRGB)
+		self.heightmap.putpixel( tLeft, topLeftPtRGB)
+		self.heightmap.putpixel( bRight, botRightPtRGB)
+		self.heightmap.putpixel( tRight, topRightPtRGB)
 
 	def drawCenterPixel(self, botLeft,botRight,topRight,topLeft):
 		# Will essentially use height value of centerCoord in pixelHeightDict
 		# and store 3 copies its adjusted value to RGB tuple
 		numColorValues = 3
 		maxHeightValue = 0
-		pixelHeightDict = self.pixelHeightsDict
+		pixelHeightsDict = self.pixelHeightsDict
 		(bLX, bLY) = botLeft
 		(bRX, bRY) = botRight
 		(tRX, tRY) = topRight
@@ -103,10 +104,13 @@ class RandomTerrainGenerator(object):
 			ctrHeight = maxHeightValue if ctrHeight > maxHeightValue else 0
 
 		# Construct the RGB values for each point
-		botLeftPtRGB = (botLeftColorComp,) * numColorValues
+		ctrColorComp = maxHeightValue + int(ctrHeight)
+		ctrPtRGB = (ctrColorComp,) * numColorValues
 
 		# Output the pixel to the heightmap image
-		self.heightmap.putpixel( ctrPt, ctrHeight)
+		self.heightmap.putpixel( ctrPt, ctrPtRGB)
+
+	#def drawDiaomnd
 
 	def recurseOnUpperLeftSquare(self, botLeft,botRight,topRight,topLeft,
 									 currLevel):
@@ -119,7 +123,7 @@ class RandomTerrainGenerator(object):
 		newBotLeft = ((bLX + tLX) / 2, (bLY + tLY) / 2)
 
 		# NewBotRight will be midpoint between botLeft and topRight
-		newBotRight = ((bLX + tRX) / 2, (blY + tRY) / 2)
+		newBotRight = ((bLX + tRX) / 2, (bLY + tRY) / 2)
 
 		# NewTopRight will be midpoint between topLeft and topRight
 		newTopRight = ((tLX + tRX) / 2,(tLY + tRY) / 2)
@@ -127,8 +131,8 @@ class RandomTerrainGenerator(object):
 		# newTopLeft will be old topLeft
 		newTopLeft = topLeft
 
-		diamondSquareMapVals(newBotLeft, newBotRight, newTopRight, newTopLeft,
-								currLevel+1)
+		self.diamondSquareMapVals(newBotLeft, newBotRight, newTopRight,
+									newTopLeft,currLevel+1)
 
 	def recurseOnUpperRightSquare(self, botLeft, botRight, topRight,topLeft,
 									currLevel):
@@ -149,8 +153,8 @@ class RandomTerrainGenerator(object):
 		# newTopLeft will be midpoint between topLeft and topRight
 		newTopLeft = ( (tLX + tRX) / 2, (tLY + tRY) / 2)
 
-		diamondSquareMapVals(newBotLeft, newBotRight, newTopRight, newTopLeft,
-								currLevel+1)
+		self.diamondSquareMapVals(newBotLeft, newBotRight, newTopRight, 
+								newTopLeft,currLevel+1)
 	
 	def recurseOnLowerLeftSquare(self, botLeft, botRight, topRight,topLeft,
 									currLevel):
@@ -171,8 +175,8 @@ class RandomTerrainGenerator(object):
 		# newTopLeft will be midpoint between topLeft and botLeft
 		newTopLeft = ( (tLX + bLX) / 2, (tLY + bLY) / 2)
 
-		diamondSquareMapVals(newBotLeft, newBotRight, newTopRight, newTopLeft,
-								currLevel+1)
+		self.diamondSquareMapVals(newBotLeft, newBotRight, newTopRight,
+								newTopLeft,currLevel+1)
 
 	def recurseOnLowerRightSquare(self, botLeft, botRight, topRight,topLeft,
 									currLevel):
@@ -193,10 +197,10 @@ class RandomTerrainGenerator(object):
 		# newTopLeft will be midpoint between botLeft and topRight
 		newTopLeft = ( (bLX + tRX) / 2, (bLY + tRY) / 2)
 
-		diamondSquareMapVals(newBotLeft, newBotRight, newTopRight, newTopLeft,
-								currLevel+1)
+		self.diamondSquareMapVals(newBotLeft, newBotRight, newTopRight,
+								newTopLeft, currLevel+1)
 
-	def setHeightsOfFourCorners(self, bLeft, bRight, tRight, tLeft):
+	def setHeightsOfFourCorners(self, bLeft,bRight,tRight,tLeft,heightScale):
 		# Calculate heights for 4 corners of box:
 		bLHeight = random.random()*heightScale
 		bRHeight = random.random()*heightScale
@@ -222,9 +226,9 @@ class RandomTerrainGenerator(object):
 		tLHeight = sum(pixelHeightsDict[tLeft])/len(pixelHeightsDict[tLeft])
 
 		# set height of the center of this square to be average of corners
-		ctrAvgHeight = (LHeight + bRHeight + tRHeight + tLHeight) / 4.0
-		ctrPt = (((bLX + tRX) / 2), ((blY + tRY) / 2))
-		self.pixelHeightsDict[ctrPt] = ctrAvgHeight
+		ctrAvgHeight = (bLHeight + bRHeight + tRHeight + tLHeight) / 4.0
+		ctrPt = (((bLX + tRX) / 2), ((bLY + tRY) / 2))
+		self.pixelHeightsDict[ctrPt].add(ctrAvgHeight)
 
 
 		self.setHeightsForCornersOfDiamond(bLeft, bRight, tRight, tLeft, 
@@ -232,7 +236,7 @@ class RandomTerrainGenerator(object):
 
 
 
-	def setHeightsForCornersOfDiamond(bLeft,bRight,tRight, tLeft,
+	def setHeightsForCornersOfDiamond(self, bLeft,bRight,tRight, tLeft,
 										bLHeight, bRHeight,tRHeight,tLHeight):
 		(bLX, bLY) = bLeft
 		(bRX, bRY) = bRight
@@ -246,16 +250,16 @@ class RandomTerrainGenerator(object):
 		midBotAvgHeight = (bLHeight + bRHeight) / 2.0  #midpt(bLeft+bRight)
 
 		# corresponding coordinates
-		midLeftCoords = ( ((bLX + tLX) / 2), ((blY + tLY) / 2) )
+		midLeftCoords = ( ((bLX + tLX) / 2), ((bLY + tLY) / 2) )
 		midTopCoords = ( (( tLX + tRX) / 2), ((tLY + tRY) / 2) )
 		midRightCoords = ( (( tRX + bRX) / 2), ((tRY + bRY) / 2) )
 		midBotCoords = ( (( bLX + bRX) / 2), ((bLY + bRY) / 2) )
 
 		# Save these coords to self struct
-		self.pixelHeightsDict[midLeftCoords] = midLeftAvgHeight
-		self.pixelHeightsDict[midTopCoords] = midTopAvgHeight
-		self.pixelHeightsDict[midRightCoords] = midRightAvgHeight
-		self.pixelHeightsDict[midBotCoords] = midBotAvgHeight
+		self.pixelHeightsDict[midLeftCoords].add(midLeftAvgHeight)
+		self.pixelHeightsDict[midTopCoords].add(midTopAvgHeight)
+		self.pixelHeightsDict[midRightCoords].add(midRightAvgHeight)
+		self.pixelHeightsDict[midBotCoords].add(midBotAvgHeight)
 
 
 	def randomHeightMapVals (self,botLeft, botRight, topRight, 
@@ -512,7 +516,7 @@ class RandomTerrainGenerator(object):
 
 print "Biatch"
 heightmapSize = (256, 256)
-blankSpaceColor = "grey"
+blankSpaceColor = "white"
 heightmap = Image.new("RGB", heightmapSize, blankSpaceColor)
 
 initTLCoords = (0, 0)
@@ -525,5 +529,5 @@ randomTerraGenerator.diamondSquareMapVals (initTLCoords, initTRCoords,
 											initBLCoords, initBRCoords)
 
 # Save the image for debugging:
-heightmap.save("../rsc/randomHeightMapDebug3rd4thQuad.bmp")
+heightmap.save("../rsc/diamondSquareAlgorithmTest1.bmp")
 print "Saved image..."
