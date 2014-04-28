@@ -235,7 +235,7 @@ class TerrainMesh:
 			self.bindVertexToGroundTextureCoord(vX, height, vZ)
 		elif (snowLowerThresholdHeight<= height <= maximumHeight):
 			print "Binding to snow texture"
-			##############################################################self.bindVertexToSnowTextureCoord(vX, height, vZ)
+			self.bindVertexToSnowTextureCoord(vX, height, vZ)
 		else:
 			return False # Invalid height
 
