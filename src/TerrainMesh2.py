@@ -27,92 +27,67 @@ class TerrainMesh:
 		self.numVertices = 0
 
 		self.vertList = None
-		self.vertListAsString = None
 		self.verticesVBO = None		# Using VBOs
 
-		self.textureCoords = None
-		self.textureCoordsAsString = None
-		self.textureCoordsVBO = None # Using VBOs
-
-		self.textureId = None # Saves the reference given by GPU
+		self.colorCoords = None
+		self.colorCoordsVBO = None # Using VBOs
 
 		self.heightMapImage = None
 
-	def openValleyImages(self, heightmapPath):
-		self.grassImagePath = "../rsc/seamlesslonggreengrass.bmp"
-		self.groundImagePath = "../rsc/seamlessmixedgroundcover.bmp"
-		self.snowImagePath = "../rsc/snowtexture.bmp"
+	def loadHeightmap( self, mapPath):
 
 		# With Error handling, load heightmap image
 		try:
-			self.heightMapImage = Image.open(heightmapPath)
+			self.heightMapImage = Image.open(mapPath)
 		except:
 			print "Error opening file at %s" % (mapPath)
 			return False
 
-		# With Error handling, load grass texture image
-		try:
-			self.grassTextureImage = Image.open(self.grassImagePath)
-		except:
-			print "Error opening file at %s" % (self.grassImagePath)
-			return False
-
-		# With Error handling, load ground texture image
-		try:
-			self.groundTextureImage = Image.open(self.groundImagePath)
-		except:
-			print "Error opening file at %s" % (self.groundImagePath)
-			return False
-
-		"""# With Error handling, load snow texture image
-		try:
-			self.snowTextureImage = Image.open(self.snowImagePath)
-		except:
-			print "Error opening file at %s" % (self.snowImagePath)
-			return False
-		return True # Successfully opened file paths"""
-
-	def loadHeightmap( self, mapPath):
-
-		if (self.openValleyImages(heightmapPath = mapPath) == False):
-			print "Program error! Could not open images! Aborting..."
-			sys.exit(0)
-
-		heightScale= self.MESH_HEIGHTSCALE
-		mapResolution = self.MESH_RESOLUTION
+		heightScale= float(self.MESH_HEIGHTSCALE)
+		mapResolution = float(self.MESH_RESOLUTION)
 
 		# Create a mesh of vertices
-		lengthX = self.heightMapImage.size [0]
-		widthY = self.heightMapImage.size [1]
+		self.imLengthX = self.heightMapImage.size [0]
+		self.imWidthY = self.heightMapImage.size [1]
 		numPixelsPerVertex = 6
-		self.numVertices = int ( lengthX * widthY * numPixelsPerVertex 
-									/ (mapResolution ** 2) )
+		self.numVertices = int ( self.imLengthX * self.imWidthY 
+								* numPixelsPerVertex / (mapResolution ** 2) )
 		numVertices = self.numVertices
 
 		# Create vertList (3D points) and textureCoords (2D coords)
 		# USE NUMPY FOR ARRAY SPEED BOOST - create here array of zeros
 		# Use tuple input to describe size and dims of array
-		(vertexPointDims, texPointDims) = (3,2)
-		initHeight = 0.0
+		(vertexPointDims, colorPointDims) = (3,3)
 
 		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f') 
-		self.textureCoords= npy.zeros( (numVertices, texPointDims), 'f')
+		self.colorCoords= npy.zeros( (numVertices, colorPointDims), 'f')
 
+		self.createTerrainFromHeightmap(heightScale, mapResolution)
 
+		self.initVertexAndColorVBOs()
+
+		return True 
+
+	def initVertexAndColorVBOs(self):
+		# Update VBOs:
+		self.verticesVBO = vbo.VBO(self.vertList)
+		self.colorCoordsVBO = vbo.VBO(self.colorCoords)
+
+	def createTerrainFromHeightmap(self, heightScale, mapResolution):
 		### NEEDS OWN method!
 		terrPosZ = 0 # Our row variable
 		vertIndex = 0
-		textIndex = 0
-		halfWidthY = widthY / 2.0
-		halfLengthX = lengthX / 2.0
+		colorIndex = 0
+		halfWidthY = self.imWidthY / 2.0
+		halfLengthX = self.imLengthX / 2.0
 		mapResolutionInt = int (mapResolution)
 		numTrianglesPerUnitSquare = 6
 
 		# This algorithm is from the tutorial:
 		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
-		for terrPosZ in xrange (0,widthY,mapResolutionInt): # Rows
-			for terrPosX in xrange(0,lengthX,mapResolutionInt): # Cols
+		for terrPosZ in xrange (0,self.imWidthY,mapResolutionInt): # Rows
+			for terrPosX in xrange(0,self.imLengthX,mapResolutionInt): # Cols
 				for triangle in xrange(numTrianglesPerUnitSquare):
 					fTerrPosX = float (terrPosX)
 					if (triangle == 1 or triangle == 2 or triangle == 5):
@@ -122,43 +97,189 @@ class TerrainMesh:
 						fTerrPosZ += mapResolution
 
 					x = fTerrPosX - halfLengthX
-					y=(self.findHeightInHeightmap(int(fTerrPosX),int(terrPosZ))
+					y=(self.findHeightInHeightmap(int(fTerrPosX),int(fTerrPosZ))
 												* heightScale)
 					z = fTerrPosZ - halfWidthY
 
 					self.vertList [vertIndex] = (x,y,z)
-					self.textureCoords [textIndex] = ((fTerrPosX/lengthX),
-															(fTerrPosZ/widthY))
+					self.setVertexColorFromHeightValueAt(colorIndex, height=y)
+
 					vertIndex += 1
-					textIndex += 1
+					colorIndex += 1
 
-		# Now convert self.vertList to numpy array for easier toString conversion
-		self.vertListAsString = self.vertList.tostring () # Use numpy method
-		self.textureCoordsAsString = self.textureCoords.tostring ()
-
-		# Update VBOs:
-		self.verticesVBO = vbo.VBO(self.vertList)
-		self.textureCoordsVBO = vbo.VBO(self.textureCoords)
+		self.initVertexAndColorVBOs()
 
 
-		self.loadTextureToOpenGL()
-		return True 
+	def setVertexColorFromHeightValueAt(self, currIndex, height):
+		# Depending on this vertex's height in the world, we will assign
+		# it a certain color (grass shades for lowland, dirt shades for midland,
+		# and snow for highlands):
+		
+		self.meadowGreenMinHeight = 0
+		self.grassBladeMinHeight = 40
+		self.siennaBrownMinHeight = 80
+		self.burlyWoodMinHeight = 120
+		self.snowWhiteMinHeight = 180
+		self.pureWhiteSnowMinHeight = 255
+
+		selColor = (0,0,0)
+		if (self.meadowGreenMinHeight<=height<self.grassBladeMinHeight):
+			selColor = self.mapColorGrassGrassGradient(height)
+		elif(self.grassBladeMinHeight<=height<self.siennaBrownMinHeight):
+			selColor = self.mapColorGrassDirtGradient(height)
+		elif(self.siennaBrownMinHeight<=height<self.burlyWoodMinHeight):
+			selColor = self.mapColorDirtDirtGradient(height)
+		elif(self.burlyWoodMinHeight<=height<self.snowWhiteMinHeight):
+			selColor= self.mapColorDirtSnowGradient(height)
+		elif(self.snowWhiteMinHeight<=height):
+			selColor = self.mapColorSnowSnowGradient(height)
+		
+		self.colorCoords [currIndex] = selColor
+	
+	def mapColorGrassGrassGradient(self, vertHeight):
+		# Select color based on distance from minHeight baselines for
+		# each color for "grass" section (meadow -> bladeOfGrass 
+		# gradient). Use a linear eqtn to decide RGB blend
+	
 
 
-	def loadTextureToOpenGL(self):
-		lengthX = self.heightMapImage.size [0]
-		widthY = self.heightMapImage.size [1]
-		self.textureId = glGenTextures(1)	# Bug was here!!! 
-		glBindTexture( GL_TEXTURE_2D, self.textureId)
-		glTexImage2D (GL_TEXTURE_2D,0, 3, lengthX, widthY,0,GL_RGB,
-							GL_UNSIGNED_BYTE, 
-							self.heightMapImage.tostring("raw", "RGB",0,
-																-1))
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR)
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR)
+		meadowMinHeight = self.meadowGreenMinHeight
+		grassBladeMinHeight = self.grassBladeMinHeight
+	
+		meadowRGB = (0,92,9)
+		grassBladeRGB = (1,166,17)
+		deltaRGB = (1, 74, 8)		# delta RGB per unit deltaHeight
+		
+		deltaHeight = grassBladeMinHeight - meadowMinHeight #(RUN) for slope
 
-		# Free the texture data
-		self.heightMapImage = None
+		# selRGB = meadMinHeight+ deltaRGB/deltaHeight * X
+		# Here X will be difference between grassBladeMinHeight and vertHeight
+		heightDiff = grassBladeMinHeight - vertHeight
+
+		# Calculate the RGB values of selRGB
+		selectedColRed = int (meadowRGB[0] + 
+								deltaRGB[0]/deltaHeight * heightDiff)
+		selectedColGreen = int (meadowRGB[1] + 
+								deltaRGB[1]/deltaHeight * heightDiff)
+		selectedColBlue = int (meadowRGB[2] +
+								deltaRGB[2]/deltaHeight * heightDiff)
+
+		print "Grass to grass!", (selectedColRed, selectedColGreen, selectedColBlue)
+		return  (selectedColRed, selectedColGreen, selectedColBlue)
+
+	def mapColorGrassDirtGradient(self, vertHeight):
+		# Linearly blend RGB values of grassBladeRGB and siennaBrownRGB
+		# depending on height.
+
+		grassBladeMinHeight = self.grassBladeMinHeight
+		siennaBrownMinHeight = self.siennaBrownMinHeight
+
+		grassBladeRGB = (1, 166,17)
+		siennaBrownRGB = (142, 107, 35)
+		deltaRGB = ( 141, -59, 18)			# delta RGB per deltaHeight unit
+		
+		deltaHeight = siennaBrownMinHeight - grassBladeMinHeight
+
+		# selRGB = grassBladeRGB+ deltaRGB/deltaHeight * X
+		#Here X will be difference between siennaBrownMinHeight and vertHeight
+		heightDiff = grassBladeMinHeight - vertHeight
+
+		# Calculate the RGB values of selRGB
+		selectedColRed = int (grassBladeRGB[0] + 
+								deltaRGB[0]/deltaHeight * heightDiff)
+		selectedColGreen = int (grassBladeRGB[1] + 
+								deltaRGB[1]/deltaHeight * heightDiff)
+		selectedColBlue = int (grassBladeRGB[2] +
+								deltaRGB[2]/deltaHeight * heightDiff)
+
+		print "Grass to dirt!", (selectedColRed, selectedColGreen, selectedColBlue)
+		return  (selectedColRed, selectedColGreen, selectedColBlue)
+
+	def mapColorDirtDirtGradient(self, vertHeight):
+		# Linearly blend RGB values of siennaBrownRGB and burlyWoodRGB
+		# depending on height.
+
+		siennaBrownMinHeight = self.siennaBrownMinHeight
+		burlyWoodMinHeight = self.burlyWoodMinHeight
+
+
+		siennaBrownRGB = (142, 107, 35)
+		burlyWoodRGB = (255, 211, 155)
+		deltaRGB = ( 103, 104, 120)			# delta RGB per deltaHeight unit
+		
+		deltaHeight = burlyWoodMinHeight- siennaBrownMinHeight 
+
+		# selRGB = siennaBrownRGB+ deltaRGB/deltaHeight * X
+		#Here X will be difference between burlyWoodMinHeight and vertHeight
+		heightDiff = burlyWoodMinHeight - vertHeight
+
+		# Calculate the RGB values of selRGB
+		selectedColRed = int (siennaBrownRGB[0] + 
+								deltaRGB[0]/deltaHeight * heightDiff)
+		selectedColGreen = int (siennaBrownRGB[1] + 
+								deltaRGB[1]/deltaHeight * heightDiff)
+		selectedColBlue = int (siennaBrownRGB[2] +
+								deltaRGB[2]/deltaHeight * heightDiff)
+
+		print "dirt to dirt!", (selectedColRed, selectedColGreen, selectedColBlue)
+		return  (selectedColRed, selectedColGreen, selectedColBlue)
+
+	def mapColorDirtSnowGradient(self, vertHeight):
+		# Linearly blend RGB values of burlyWoodRGB and snowWhiteRGB
+		# depending on height.
+
+		burlyWoodMinHeight = self.burlyWoodMinHeight
+		snowWhiteMinHeight = self.snowWhiteMinHeight
+
+		burlyWoodRGB = (255, 211, 155)
+		snowWhiteRGB = (245, 245, 245)
+		deltaRGB = ( -10, 34, 90)			# delta RGB per deltaHeight unit
+		
+		deltaHeight = snowWhiteMinHeight - burlyWoodMinHeight
+
+		# selRGB = burlyWoodRGB+ deltaRGB/deltaHeight * X
+		#Here X will be difference between snowWhiteMinHeight and vertHeight
+		heightDiff = snowWhiteMinHeight - vertHeight
+
+		# Calculate the RGB values of selRGB
+		selectedColRed = int (burlyWoodRGB[0] + 
+								deltaRGB[0]/deltaHeight * heightDiff)
+		selectedColGreen = int (burlyWoodRGB[1] + 
+								deltaRGB[1]/deltaHeight * heightDiff)
+		selectedColBlue = int (burlyWoodRGB[2] +
+								deltaRGB[2]/deltaHeight * heightDiff)
+
+		print "dirt to snow!", (selectedColRed, selectedColGreen, selectedColBlue)
+		return  (selectedColRed, selectedColGreen, selectedColBlue)
+
+	def mapColorSnowSnowGradient(self, vertHeight):
+		# Linearly blend RGB values of burlyWoodRGB and snowWhiteRGB
+		# depending on height.
+
+		offSnowWhiteMinHeight = self.snowWhiteMinHeight
+		pureWhiteSnowMinHeight = self.pureWhiteSnowMinHeight
+
+		offSnowWhiteRGB = (245, 245, 245)
+		pureSnowWhiteRGB = (255, 255, 255)
+		deltaRGB = ( 10, 10, 10)			# delta RGB per deltaHeight unit
+		
+		deltaHeight = pureWhiteSnowMinHeight - offSnowWhiteMinHeight
+
+		# selRGB = offSnowWhiteRGB+ deltaRGB/deltaHeight * X
+		#Here X will be difference between pureSnowWhiteMinHeight 
+		# and vertHeight
+		heightDiff = snowWhiteMinHeight - vertHeight
+
+		# Calculate the RGB values of selRGB
+		selectedColRed = int (offSnowWhiteRGB[0] + 
+								deltaRGB[0]/deltaHeight * heightDiff)
+		selectedColGreen = int (offSnowWhiteRGB[1] + 
+								deltaRGB[1]/deltaHeight * heightDiff)
+		selectedColBlue = int (offSnowWhiteRGB[2] +
+								deltaRGB[2]/deltaHeight * heightDiff)
+		
+		print "snow to snow!", (selectedColRed, selectedColGreen, selectedColBlue)
+		return  (selectedColRed, selectedColGreen, selectedColBlue)
 
 	def findHeightInHeightmap( self, pixelX, pixelY):
 		# Finds the height at pt (pixelX,pixelY)
@@ -188,46 +309,28 @@ class TerrainMesh:
 	
 	def drawValley(self):
 
-		self.drawValleyGrass()
-
-		self.drawValleyGround()
-
-		################self.drawValleySnow()
-
-
-	def drawValleyGrass(self):
-		grassTextureImage = self.grassTextureImage
-		grassTextureId = self.grassTextureId
-		numVertices = self.textureGrassCoordIndex- 1 # Number of verts in list
-
-		# Bind the texture coordinates to screen ( a viewport ):
-		resultId = self.loadTextureToOpenGL(grassTextureImage, grassTextureId)
-		# Save the resulting textureId
-		self.grassTextureId = resultId
-
 		# // Enable Pointers
 		glEnableClientState( GL_VERTEX_ARRAY )	# // Enable Vertex Arrays
 		# // Enable Texture Coord Arrays
-		glEnableClientState( GL_TEXTURE_COORD_ARRAY )	
+		glEnableClientState( GL_COLOR_ARRAY )	
 
 		# Bind the Vertex Buffer Objects (VBOs) to graphics card
-		# Grass verts and texturecoords are synchronized on the card
-		self.grassVerticesVBO.bind()
+		# Vertex data and Color data are synced in GPU
+		self.verticesVBO.bind()
 		glVertexPointer(3, GL_FLOAT, 0, None)	# Inits the pointer in GPU
-		self.textureGrassCoordsVBO.bind()
-		glTexCoordPointer( 2, GL_FLOAT, 0, None)# Inits the pointer in GPU
+		self.colorCoordsVBO.bind()
+		glColorPointer( 3, GL_FLOAT, 0, None)# Inits the pointer in GPU
 
 		# DRAW THE LANDSCAPE HERE
-		glDrawArrays (GL_TRIANGLES, 0, numVertices)
+		glDrawArrays (GL_TRIANGLES, 0, self.numVertices)
 		
 		# Unbind the VBOs here:
-		self.textureGrassCoordsVBO.unbind()
-		self.grassVerticesVBO.unbind()
+		self.colorCoordsVBO.unbind()
+		self.verticesVBO.unbind()
 
+		# // Disable Color Coord Arrays
+		glDisableClientState( GL_COLOR_ARRAY )	
 		# // Disable Pointers
 		glDisableClientState( GL_VERTEX_ARRAY )# // Disable Vertex Arrays
-		# // Disable Texture Coord Arrays
-		glDisableClientState( GL_TEXTURE_COORD_ARRAY )	
 		
-		# Unload the texture from Opengl:
-		self.unloadTextureFromOpenGL() 
+

@@ -69,7 +69,7 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		self.valleyMesh.loadTextureToOpenGL()	# Render world!
+		self.valleyMesh.drawValley()	# Render world!
 
 		glPopMatrix()
 
@@ -77,7 +77,7 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		self.valleyMesh.loadTextureToOpenGL()	# Render world!
+		self.valleyMesh.drawValley()	# Render world!
 
 		glPopMatrix()
 
@@ -146,7 +146,7 @@ class PyOculusValleyAnimation(object):
 		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_ALPHA)
 		glutInitWindowPosition(0,0)
 		glutInitWindowSize(self.width, self.height)
-		glutCreateWindow("Headtracking Test")
+		glutCreateWindow("FlyPy Valley")
 		glViewport(0, 0, self.width, self.height)# Create a viewport for window
 
 		# From TUTNeheHeightmap.py ::::
@@ -191,8 +191,8 @@ class PyOculusValleyAnimation(object):
 
 
 		self.valleyMesh = TerrainMesh()
-		
-		if (self.valleyMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
+		heightMapPath = "../rsc/U-shapedCliffValley.bmp"
+		if (self.valleyMesh.loadHeightmap(heightMapPath) == False):
 			print "Error loading heightmap!"
 			sys.exit(1)
 

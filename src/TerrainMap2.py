@@ -234,7 +234,7 @@ class TerrainMapAnimation(object):
 	def initGL (self, width, height):
 		# Load the mesh data
 		self.terrainMesh = TerrainMesh()
-		if (self.terrainMesh.loadHeightmap("../rsc/diamondSquareAlgorithmTest1.bmp") == False):
+		if (self.terrainMesh.loadHeightmap("../rsc/U-shapedCliffValley.bmp") == False):
 			print "Error loading heightmap!"
 			sys.exit(1)
 
