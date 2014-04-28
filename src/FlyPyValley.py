@@ -1,7 +1,7 @@
 # FlyPyValley.py
 
 from OculusCamera import *
-from TerrainMesh import *
+from TerrainMesh2 import *
 
 # PyOpenGl modules
 from OpenGL.GL import *
@@ -69,7 +69,7 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		self.valleyMesh.drawValley()	# Render world!
+		self.valleyMesh.loadTextureToOpenGL()	# Render world!
 
 		glPopMatrix()
 
@@ -77,7 +77,7 @@ class PyOculusValleyAnimation(object):
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		self.valleyMesh.drawValley()	# Render world!
+		self.valleyMesh.loadTextureToOpenGL()	# Render world!
 
 		glPopMatrix()
 

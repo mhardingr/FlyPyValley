@@ -23,12 +23,14 @@ class TerrainMesh:
 		self.numVertices = 0
 		
 		# Make sure the clams have left nodes
-		self.initVertexDataAndVertexTypeVBOs()
+		self.initVerticesVBO()
 
 		self.initTexturesAndTextureVBOs()
 		self.heightMapImage = None
 
-	def initVertexDataAndVertexTypeVBOs(self):
+	def initVerteicesVBO(self):
+		
+		"""
 		# Use lists first then convert to numpy arrays later
 		self.grassVertList = []	
 		self.groundVertList = []
@@ -37,7 +39,7 @@ class TerrainMesh:
 		# Using Vertex Buffer Obj. (GPU memory) for increased performance
 		self.grassVerticesVBO = None	
 		self.groundVerticesVBO = None
-		self.snowVerticesVBO = None
+		self.snowVerticesVBO = None"""
 
 	def initTexturesAndTextureVBOs(self):
 		self.grassTextureImage = None 
@@ -190,7 +192,7 @@ class TerrainMesh:
 		halfLengthX = lengthX / 2.0
 		mapResolutionInt = int (mapResolution)
 		numTrianglesPerUnitSquare = 6
-
+		self.vertList = npy.zeros ( (numVertices, vertexPointDims), 'f')
 		# This triangle indexing algorithm adapted from the tutorial:
 		# http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
