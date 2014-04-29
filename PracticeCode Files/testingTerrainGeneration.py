@@ -1,7 +1,9 @@
-# FlyPyValley.py
+# testingterrainGeneration.py 
+
+# PyOculusValley.py OLDD REVERT
 
 from OculusCamera import *
-from TerrainMesh2 import *	# Version 2 works better!
+from TerrainMesh import *
 
 # PyOpenGl modules
 from OpenGL.GL import *
@@ -9,30 +11,8 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from OpenGL.arrays import vbo # Enables use of VBOs
 
-# For random choosing of the heightmap when multiplayer is disabled
-import random
 
-
-class FlyPyValleyGame(object):
-	def __init__(self, multiplayerFlag = False):
-		self.multiplayerFlag = multiplayerFlag
-
-		# Init list of possible bmp heightmaps to load as terrains
-		heightmapNamesList = ["aoneillSpoonValley.bmp", "AtollValley.bmp",
-							  "BumpyTerrain.bmp", "CanyonyValley.bmp",
-							  "RollingValley.bmp", "BlotchyValley.bmp"]
-
-		selectedHeightmap = None
-
-		# If multiplayer enabled, then use "BlotchyValley.bmp"
-		if (multiplayerFlag == True):	
-			selectedHeightmap = "BlotchyValley.bmp"
-		else:
-			selectedHeightmap = random.choice(heightmapNamesList)
-
-		# Save the selectedHeightmap for loading later
-		print "Using the %s heightmap!\n\n" % selectedHeightmap
-		self.heightmapPath = selectedHeightmap
+class PyOculusValleyAnimation(object):
 
 	def animationTimer(self):
 		# Update orientation of Oculus!
@@ -55,10 +35,10 @@ class FlyPyValleyGame(object):
 
 	def redrawAll(self):
 
-		self.renderWorld()
+		self.practiceRender()
 
 
-	def renderWorld(self):
+	def practiceRender(self):
 		# ~30 lines of code!
 
 		# Routine:
@@ -67,7 +47,7 @@ class FlyPyValleyGame(object):
 		# Change perspective (projection mode)
 		# loadIdentity for ModelView
 		# Draw miscellaneous
-		
+
 		# Clear color and depth buffers
 		glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -91,15 +71,70 @@ class FlyPyValleyGame(object):
 		glPushMatrix()
 		self.oculus.applyLeftEye()
 
-		self.valleyMesh.drawValley()	# Render world!
+		# Bind the texture coordinates to this viewport:
+		self.valleyMesh.loadTextureToOpenGL()
+
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+
+
+
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		self.valleyMesh.verticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)
+		self.valleyMesh.textureCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)
+
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
+
+		# Unbind the VBOs here:
+		self.valleyMesh.textureCoordsVBO.unbind()
+		self.valleyMesh.verticesVBO.unbind()
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY );	
+
 
 		glPopMatrix()
 
+
+		###
 		# Apply scene to the right eye next
 		glPushMatrix()
 		self.oculus.applyRightEye()
 
-		self.valleyMesh.drawValley()	# Render world!
+		# Bind the texture coordinates to this viewport:
+		self.valleyMesh.loadTextureToOpenGL()
+
+		# // Enable Pointers
+		glEnableClientState( GL_VERTEX_ARRAY );	# // Enable Vertex Arrays
+		# // Enable Texture Coord Arrays
+		glEnableClientState( GL_TEXTURE_COORD_ARRAY );	
+
+
+		# Bind the Vertex Buffer Objects (VBOs) to graphics card
+		self.valleyMesh.verticesVBO.bind()
+		glVertexPointer(3, GL_FLOAT, 0, None)
+		self.valleyMesh.textureCoordsVBO.bind()
+		glTexCoordPointer( 2, GL_FLOAT, 0, None)
+
+		# DRAW THE LANDSCAPE HERE
+		glDrawArrays (GL_TRIANGLES, 0, self.valleyMesh.numVertices)
+
+		# Unbind the VBOs here:
+		self.valleyMesh.textureCoordsVBO.unbind()
+		self.valleyMesh.verticesVBO.unbind()
+
+		# // Disable Pointers
+		glDisableClientState( GL_VERTEX_ARRAY );# // Disable Vertex Arrays
+		# // Disable Texture Coord Arrays
+		glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 
 		glPopMatrix()
 
@@ -108,7 +143,7 @@ class FlyPyValleyGame(object):
 	def normalKeyEvent(self, eventArgs):	# Handle character events
 		escKeyAscii = 27
 		keysym = eventArgs[0]
-		
+
 		if (keysym == chr(escKeyAscii)): # quit if pressed escape key 
 			sys.exit()	
 		elif (keysym == 'i'):
@@ -119,13 +154,14 @@ class FlyPyValleyGame(object):
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
 		elif (keysym == "+"):
-			OculusCamera.noseToPupilDistance += 0.025	# Manual offset 
+			OculusCamera.noseToPupilDistance += 0.025
 			print OculusCamera.noseToPupilDistance
 		elif (keysym == "-"):
-			OculusCamera.noseToPupilDistance -= .025	# Manual offset 
+			OculusCamera.noseToPupilDistance -= .025
 			print OculusCamera.noseToPupilDistance
 
 	def keyUpEventHandler(self, eventArgs):	# Handles the release of arrow key
+		print "Key released!"
 		keysym = eventArgs[0]
 		if (keysym == GLUT_KEY_LEFT):
 			self.keyStates["LEFT"] = False
@@ -162,17 +198,17 @@ class FlyPyValleyGame(object):
 
 
 	def initGL(self):
-		
+
 		glutInit()
 		glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_ALPHA)
 		glutInitWindowPosition(0,0)
 		glutInitWindowSize(self.width, self.height)
-		glutCreateWindow("FlyPy Valley")
+		glutCreateWindow("Headtracking Test")
 		glViewport(0, 0, self.width, self.height)# Create a viewport for window
 
 		# From TUTNeheHeightmap.py ::::
 		# Setup GL States
-		glClearColor (192/255.0,192/255.0, 192/255.0, 0.5);# // Grey Background
+		glClearColor (192/255.0,192/255.0, 192/255.0, 0.5);# // Black Background
 		glClearDepth (1.0);								   # // Depth Buffer Setup
 		glDepthFunc (GL_LEQUAL);						   # // The Type Of Depth Testing
 		glEnable (GL_DEPTH_TEST);							# // Enable Depth Testing
@@ -210,21 +246,17 @@ class FlyPyValleyGame(object):
 		self.nearClip = 0.2
 		self.farClip = 1000
 
-		# Create TerrainMesh object to load the selectedHeightmap file
+
 		self.valleyMesh = TerrainMesh()
-		heightmapRelativePath = "../rsc/" + self.heightmapPath
-		# If there is an error in opening the file, close the program
-		# AND SOCKETS!######################################
-		if (self.valleyMesh.loadHeightmap(heightmapRelativePath) == False):
+
+		if (self.valleyMesh.loadHeightmap("../rsc/Terrain.bmp") == False):
 			print "Error loading heightmap!"
 			sys.exit(1)
 
 	def main(self):
 		(self.width, self.height) = (600, 480)
 		self.initWorldData()
-		if(self.multiplayerFlag == True):
-			pass
 		self.initGL()
 
-myAnimation = FlyPyValleyGame()
-myAnimation.main() 
+myAnimation = PyOculusValleyAnimation()
+myAnimation.main()

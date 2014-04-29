@@ -1,22 +1,42 @@
-# GameServer.py
-
-# This code will start up a GameServer object that will:
-# 1) Run continuously handling incoming connections from new instances
-#  		of the FlyPyValleyGame class.
-# 2) Uses threads to be able to handle multiple connections at a time 
-# 3) For each connection, the GameServer will first recieve the positional
-# 		data from each player (game instance) and save this data. The 
-#		GameServer instance will also send (as a string!) out its currently
-#		 saved data for all the connected players to all the connected 
-#			players (which will accordingly eval(receivedData) to retrieve
-#			the copy of the list).
-# 4) When a FlyPyValley game instance is closed, its socket will send
-# 		a "Close" command, which will trigger the thread running that
-#  		connection code to stop running and die.
-
+# SocketPracticeServer.py
 
 import socket
+import threading
 import thread
+
+class SocketHandlingThread (threading.Thread):
+	def __init__(self):
+		super(SocketThread,self).__init__()
+		self.accessPort = 3210
+		self.host = '128.237.68.111'	# Static IP for Desktop
+
+		self.clientSock = socket.socket()
+		self.exit = False
+		self.taskQueue = Queue.Queue() 
+
+		self.initSocket()
+
+	def initSocket(self):
+		self.clientSock.connect( (self.host, self.accesPort) )
+	
+	def run(self):
+		# TODO: whatever WHILE LOOP
+		"""
+		while (self.exit != True):
+			BLA
+
+
+		"""
+		pass
+
+	def stop(self):
+		self.exit = True
+
+		# To call in main program
+		# s = SocketThread()
+		# s.start()
+
+		# When exit program, call s.stop()
 
 class GameServer(object):
 	def __init__(self, hostname, gameComsPort):
