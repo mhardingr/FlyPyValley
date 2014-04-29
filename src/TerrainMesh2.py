@@ -34,6 +34,13 @@ class TerrainMesh:
 
 		self.heightMapImage = None
 
+		# Save the terrain type colors (grass, grass-dirt mix, etc.)
+		self.meadowRGB = (0,92,9)
+		self.grassBladeRGB = (0,153,0)
+		self.siennaBrownRGB = (142, 107, 35)
+		self.burlyWoodRGB = (255, 211, 155)
+		self.snowWhiteRGB = (245, 245, 245)
+		self.pureSnowWhiteRGB = (255, 255, 255)
 		self.maxColorCompVal = 255.0
 
 	def loadHeightmap( self, mapPath):
@@ -116,15 +123,13 @@ class TerrainMesh:
 		# Depending on this vertex's height in the world, we will assign
 		# it a certain color (grass shades for lowland, dirt shades for midland,
 		# and snow for highlands):
-		
-		print "Height", height,
 
 		self.meadowGreenMinHeight = 0
-		self.grassBladeMinHeight = 60
-		self.siennaBrownMinHeight = 140
-		self.burlyWoodMinHeight = 200
-		self.snowWhiteMinHeight = 240
-		self.pureWhiteSnowMinHeight = 255
+		self.grassBladeMinHeight = 70
+		self.siennaBrownMinHeight = 100
+		self.burlyWoodMinHeight = 150
+		self.snowWhiteMinHeight = 170
+		self.pureWhiteSnowMinHeight = 220
 
 		selColor = (0,0,0)
 		if (self.meadowGreenMinHeight<=height<self.grassBladeMinHeight):
@@ -151,8 +156,8 @@ class TerrainMesh:
 		meadowMinHeight = self.meadowGreenMinHeight
 		grassBladeMinHeight = self.grassBladeMinHeight
 	
-		meadowRGB = (0,92,9)
-		grassBladeRGB = (1,166,17)
+		meadowRGB = self.meadowRGB
+		grassBladeRGB = self.grassBladeRGB
 
 		maxColorFactor = self.findMaxColorGradientFactor(meadowMinHeight,
 														 grassBladeMinHeight,
@@ -177,8 +182,8 @@ class TerrainMesh:
 		grassBladeMinHeight = self.grassBladeMinHeight
 		siennaBrownMinHeight = self.siennaBrownMinHeight
 
-		grassBladeRGB = (1, 166,17)
-		siennaBrownRGB = (142, 107, 35)
+		grassBladeRGB = self.grassBladeRGB
+		siennaBrownRGB = self.siennaBrownRGB
 
 		maxColorFactor = self.findMaxColorGradientFactor(grassBladeMinHeight,
 														 siennaBrownMinHeight,
@@ -203,8 +208,8 @@ class TerrainMesh:
 		burlyWoodMinHeight = self.burlyWoodMinHeight
 
 
-		siennaBrownRGB = (142, 107, 35)
-		burlyWoodRGB = (255, 211, 155)
+		siennaBrownRGB = self.siennaBrownRGB
+		burlyWoodRGB = self.burlyWoodRGB
 
 		# Find gradient ratios/ weights of max and min colors
 		maxColorFactor = self.findMaxColorGradientFactor(siennaBrownMinHeight,
@@ -230,8 +235,8 @@ class TerrainMesh:
 		burlyWoodMinHeight = self.burlyWoodMinHeight
 		snowWhiteMinHeight = self.snowWhiteMinHeight
 
-		burlyWoodRGB = (255, 211, 155)
-		snowWhiteRGB = (245, 245, 245)
+		burlyWoodRGB = self.burlyWoodRGB
+		snowWhiteRGB = self.snowWhiteRGB
 
 		# Find gradient factors / weights of bound colors
 		maxColorFactor = self.findMaxColorGradientFactor(burlyWoodMinHeight,
@@ -257,8 +262,8 @@ class TerrainMesh:
 		offSnowWhiteMinHeight = self.snowWhiteMinHeight
 		pureWhiteSnowMinHeight = self.pureWhiteSnowMinHeight
 
-		offSnowWhiteRGB = (245, 245, 245)
-		pureSnowWhiteRGB = (255, 255, 255)
+		offSnowWhiteRGB = self.snowWhiteRGB
+		pureSnowWhiteRGB = self.pureSnowWhiteRGB
 
 		# Calculate the weights of the bound colors
 		maxColorFactor= self.findMaxColorGradientFactor(offSnowWhiteMinHeight,
