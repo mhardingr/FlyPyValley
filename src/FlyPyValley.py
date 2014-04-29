@@ -191,7 +191,7 @@ class PyOculusValleyAnimation(object):
 
 
 		self.valleyMesh = TerrainMesh()
-		heightMapPath = "../rsc/U-shapedCliffValley.bmp"
+		heightMapPath = "../rsc/yosemiteValley.bmp"
 		if (self.valleyMesh.loadHeightmap(heightMapPath) == False):
 			print "Error loading heightmap!"
 			sys.exit(1)
@@ -202,4 +202,4 @@ class PyOculusValleyAnimation(object):
 		self.initGL()
 
 myAnimation = PyOculusValleyAnimation()
-myAnimation.main()
+myAnimation.main() 
