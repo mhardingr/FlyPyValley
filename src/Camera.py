@@ -34,7 +34,8 @@ class Camera(object):
 		self.yLineOfSight = 1.0 / (3**2)
 		self.zLineOfSight = 1.0 / (3**2)
 
-		self.motionSpeed = 0.5 # world units per frame
+		self.motionSpeed = .75 # world units per frame
+		self.turnSpeed = 0.75 # deg of rotation per fram
 
 	def setRotationXYZ(self, xRot, yRot, zRot):
 		self.xRot = xRot
@@ -94,7 +95,7 @@ class Camera(object):
 
 	def turnLeft(self):
 		# To turn "left" theta degrees from current line of sight
-		dTheta = -0.5 # degrees
+		dTheta = -self.turnSpeed # degrees/frame
 		dThetaRads = dTheta / Camera.degsPerRadian
 		xRotRads = self.xRot / Camera.degsPerRadian
 		yRotRads = self.yRot / Camera.degsPerRadian
@@ -131,7 +132,7 @@ class Camera(object):
 
 	def turnRight(self):
 		# To turn "right" theta degrees from the current line of sight vector
-		dTheta = +0.5 # degrees
+		dTheta = +self.turnSpeed # degrees per frame
 		self.orientatingYRotOffset += dTheta
 
 		self.yRot += dTheta

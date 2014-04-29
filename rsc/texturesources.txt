@@ -1,14 +1,17 @@
-seamlessmixedgroundcover.bmp converted from:
-<http://3.bp.blogspot.com/-lEKMFY4mO7E/UmpL3o-Rd1I/AAAAAAAAEm0/64cu8Is6CfI/s1600/Patch+grass+00+seamless.jpg>
-
-seamlesslonggreengrass.bmp converted from:
-<http://texturelib.com/texture/?path=/Textures/grass/grass/grass_grass_0099>
-
-snowtexture.bmp converted from:
-<http://aesiria.com/textures/snow2_512.png>
-
-U-shapedCliffValey.bmp converted from :
+CliffyValley.bmp converted from :
 <http://thumbs2.modthesims.info/img/5/0/2/8/9/9/MTS_cameranutz2-1280609-3StarlightShores.png>
 
-yosemiteValley.bmp converted from:
+CanyonyValley.bmp converted from:
 <http://cdn.wolfire.com/legacy/blog/yosemite_hm.jpg>
+
+BumpyTerrain.bmp downloaded from 'Python' link at bottom of:
+<http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/>
+
+aoneillSpoonValley.bmp converted from:
+<http://terramotus.aoneill.org/>
+
+AtollValley.bmp converted from:
+<http://i995.photobucket.com/albums/af79/battje/sd.jpg?t=1259002622>
+
+BlotchyValley.bmp converted from:
+<http://forum.unity3d.com/attachment.php?attachmentid=9658&stc=1&d=1267180963>

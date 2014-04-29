@@ -9,8 +9,29 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from OpenGL.arrays import vbo # Enables use of VBOs
 
+# For random choosing of the heightmap when multiplayer is disabled
+import random
 
-class PyOculusValleyAnimation(object):
+
+class PyOculusValleyGame(object):
+	def __init__(self, multiplayerFlag = False):
+		self.multiplayerFlag = multiplayerFlag
+
+		heightmapNamesList = ["aoneillSpoonValley.bmp", "AtollValley.bmp",
+							  "BumpyTerrain.bmp", "CanyonyValley.bmp",
+							  "CliffyValley.bmp", "BlotchyValley.bmp"]
+
+		selectedHeightmap = None
+
+		# If multiplayer enabled, then use "BlotchyValley.bmp"
+		if (multiplayerFlag == True):	
+			selectedHeightmap = "BlotchyValley.bmp"
+		else:
+			selectedHeightmap = random.choice(heightmapNamesList)
+
+		# Save the selectedHeightmap for loading later
+		print "Using the %s heightmap!" % selectedHeightmap
+		self.heightmapPath = selectedHeightmap
 
 	def animationTimer(self):
 		# Update orientation of Oculus!
@@ -47,7 +68,7 @@ class PyOculusValleyAnimation(object):
 		# Draw miscellaneous
 		
 		# Clear color and depth buffers
-		#glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
+		glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		# Reset projecction matrix
@@ -97,14 +118,13 @@ class PyOculusValleyAnimation(object):
 			self.oculus.setRotationXYZ(0.0,0.0,0.0)
 
 		elif (keysym == "+"):
-			OculusCamera.noseToPupilDistance += 0.025
+			OculusCamera.noseToPupilDistance += 0.025	# Manual offset 
 			print OculusCamera.noseToPupilDistance
 		elif (keysym == "-"):
-			OculusCamera.noseToPupilDistance -= .025
+			OculusCamera.noseToPupilDistance -= .025	# Manual offset 
 			print OculusCamera.noseToPupilDistance
 
 	def keyUpEventHandler(self, eventArgs):	# Handles the release of arrow key
-		print "Key released!"
 		keysym = eventArgs[0]
 		if (keysym == GLUT_KEY_LEFT):
 			self.keyStates["LEFT"] = False
@@ -170,7 +190,7 @@ class PyOculusValleyAnimation(object):
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
 		glutSpecialUpFunc(lambda *eventArgs: self.keyUpEventHandler(eventArgs))
 		# Fullscreen
-		#glutFullScreen()
+		glutFullScreen()
 
 		# Call Timer function as with TKinter
 		self.animationTimer()
@@ -189,10 +209,12 @@ class PyOculusValleyAnimation(object):
 		self.nearClip = 0.2
 		self.farClip = 1000
 
-
+		# Create TerrainMesh object to load the selectedHeightmap file
 		self.valleyMesh = TerrainMesh()
-		heightMapPath = "../rsc/yosemiteValley.bmp"
-		if (self.valleyMesh.loadHeightmap(heightMapPath) == False):
+		heightmapRelativePath = "../rsc/" + self.heightmapPath
+		# If there is an error in opening the file, close the program
+		# AND SOCKETS!######################################
+		if (self.valleyMesh.loadHeightmap(heightmapRelativePath) == False):
 			print "Error loading heightmap!"
 			sys.exit(1)
 
@@ -201,5 +223,5 @@ class PyOculusValleyAnimation(object):
 		self.initWorldData()
 		self.initGL()
 
-myAnimation = PyOculusValleyAnimation()
+myAnimation = PyOculusValleyGame()
 myAnimation.main() 
