@@ -13,13 +13,14 @@ from OpenGL.arrays import vbo # Enables use of VBOs
 import random
 
 
-class PyOculusValleyGame(object):
+class FlyPyValleyGame(object):
 	def __init__(self, multiplayerFlag = False):
 		self.multiplayerFlag = multiplayerFlag
 
+		# Init list of possible bmp heightmaps to load as terrains
 		heightmapNamesList = ["aoneillSpoonValley.bmp", "AtollValley.bmp",
 							  "BumpyTerrain.bmp", "CanyonyValley.bmp",
-							  "CliffyValley.bmp", "BlotchyValley.bmp"]
+							  "RollingValley.bmp", "BlotchyValley.bmp"]
 
 		selectedHeightmap = None
 
@@ -30,7 +31,7 @@ class PyOculusValleyGame(object):
 			selectedHeightmap = random.choice(heightmapNamesList)
 
 		# Save the selectedHeightmap for loading later
-		print "Using the %s heightmap!" % selectedHeightmap
+		print "Using the %s heightmap!\n\n" % selectedHeightmap
 		self.heightmapPath = selectedHeightmap
 
 	def animationTimer(self):
@@ -221,7 +222,9 @@ class PyOculusValleyGame(object):
 	def main(self):
 		(self.width, self.height) = (600, 480)
 		self.initWorldData()
+		if(self.multiplayerFlag == True):
+			pass
 		self.initGL()
 
-myAnimation = PyOculusValleyGame()
+myAnimation = FlyPyValleyGame()
 myAnimation.main() 

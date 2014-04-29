@@ -1,4 +1,4 @@
-# SocketPracticeClient.py
+# SocketGameClient.py
 
 import socket
 import time
