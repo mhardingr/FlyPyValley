@@ -34,6 +34,8 @@ class TerrainMesh:
 
 		self.heightMapImage = None
 
+		self.maxColorCompVal = 255.0
+
 	def loadHeightmap( self, mapPath):
 
 		# With Error handling, load heightmap image
@@ -115,11 +117,13 @@ class TerrainMesh:
 		# it a certain color (grass shades for lowland, dirt shades for midland,
 		# and snow for highlands):
 		
+		print "Height", height,
+
 		self.meadowGreenMinHeight = 0
-		self.grassBladeMinHeight = 40
-		self.siennaBrownMinHeight = 80
-		self.burlyWoodMinHeight = 120
-		self.snowWhiteMinHeight = 180
+		self.grassBladeMinHeight = 60
+		self.siennaBrownMinHeight = 140
+		self.burlyWoodMinHeight = 200
+		self.snowWhiteMinHeight = 240
 		self.pureWhiteSnowMinHeight = 255
 
 		selColor = (0,0,0)
@@ -134,70 +138,66 @@ class TerrainMesh:
 		elif(self.snowWhiteMinHeight<=height):
 			selColor = self.mapColorSnowSnowGradient(height)
 		
-		self.colorCoords [currIndex] = selColor
+		# Limit the RGB values between 0 and 255/255
+		# Must be RGB in range [0.0,1.0]
+		selColor = self.restrictRGBValue(*selColor)
+
+		self.colorCoords [currIndex] = selColor	
 	
 	def mapColorGrassGrassGradient(self, vertHeight):
-		# Select color based on distance from minHeight baselines for
-		# each color for "grass" section (meadow -> bladeOfGrass 
-		# gradient). Use a linear eqtn to decide RGB blend
-	
-
+		# Calculate color by weighted average of colors at boundaries
+		# weights determined by closeness of vertHeight to each bound
 
 		meadowMinHeight = self.meadowGreenMinHeight
 		grassBladeMinHeight = self.grassBladeMinHeight
 	
 		meadowRGB = (0,92,9)
 		grassBladeRGB = (1,166,17)
-		deltaRGB = (1, 74, 8)		# delta RGB per unit deltaHeight
-		
-		deltaHeight = grassBladeMinHeight - meadowMinHeight #(RUN) for slope
 
-		# selRGB = meadMinHeight+ deltaRGB/deltaHeight * X
-		# Here X will be difference between grassBladeMinHeight and vertHeight
-		heightDiff = grassBladeMinHeight - vertHeight
+		maxColorFactor = self.findMaxColorGradientFactor(meadowMinHeight,
+														 grassBladeMinHeight,
+														 vertHeight)
+		minColorFactor = 1.0 - maxColorFactor		
+
 
 		# Calculate the RGB values of selRGB
-		selectedColRed = int (meadowRGB[0] + 
-								deltaRGB[0]/deltaHeight * heightDiff)
-		selectedColGreen = int (meadowRGB[1] + 
-								deltaRGB[1]/deltaHeight * heightDiff)
-		selectedColBlue = int (meadowRGB[2] +
-								deltaRGB[2]/deltaHeight * heightDiff)
+		selectedColRed = int (meadowRGB[0]*minColorFactor + 
+									grassBladeRGB[0]*maxColorFactor)
+		selectedColGreen = int (meadowRGB[1]*minColorFactor + 
+								grassBladeRGB[1]*maxColorFactor)
+		selectedColBlue = int (meadowRGB[2]*minColorFactor +
+								grassBladeRGB[2]*maxColorFactor)
 
-		print "Grass to grass!", (selectedColRed, selectedColGreen, selectedColBlue)
 		return  (selectedColRed, selectedColGreen, selectedColBlue)
 
 	def mapColorGrassDirtGradient(self, vertHeight):
-		# Linearly blend RGB values of grassBladeRGB and siennaBrownRGB
-		# depending on height.
+		# Calculate color by weighted average of min and maxColors
+		# for this region of terrain.
 
 		grassBladeMinHeight = self.grassBladeMinHeight
 		siennaBrownMinHeight = self.siennaBrownMinHeight
 
 		grassBladeRGB = (1, 166,17)
 		siennaBrownRGB = (142, 107, 35)
-		deltaRGB = ( 141, -59, 18)			# delta RGB per deltaHeight unit
-		
-		deltaHeight = siennaBrownMinHeight - grassBladeMinHeight
 
-		# selRGB = grassBladeRGB+ deltaRGB/deltaHeight * X
-		#Here X will be difference between siennaBrownMinHeight and vertHeight
-		heightDiff = grassBladeMinHeight - vertHeight
+		maxColorFactor = self.findMaxColorGradientFactor(grassBladeMinHeight,
+														 siennaBrownMinHeight,
+														 vertHeight)
+		minColorFactor = 1.0 - maxColorFactor
 
 		# Calculate the RGB values of selRGB
-		selectedColRed = int (grassBladeRGB[0] + 
-								deltaRGB[0]/deltaHeight * heightDiff)
-		selectedColGreen = int (grassBladeRGB[1] + 
-								deltaRGB[1]/deltaHeight * heightDiff)
-		selectedColBlue = int (grassBladeRGB[2] +
-								deltaRGB[2]/deltaHeight * heightDiff)
+		selectedColRed = int (grassBladeRGB[0]*minColorFactor + 
+								siennaBrownRGB[0]*maxColorFactor)
+		selectedColGreen = int (grassBladeRGB[1]*minColorFactor + 
+								siennaBrownRGB[1]*maxColorFactor)
+		selectedColBlue = int (grassBladeRGB[2]*minColorFactor +
+								siennaBrownRGB[2]*maxColorFactor)
 
-		print "Grass to dirt!", (selectedColRed, selectedColGreen, selectedColBlue)
 		return  (selectedColRed, selectedColGreen, selectedColBlue)
 
 	def mapColorDirtDirtGradient(self, vertHeight):
-		# Linearly blend RGB values of siennaBrownRGB and burlyWoodRGB
-		# depending on height.
+		# Calculate color by weighted average of min and maxColors
+		# for this region of terrain.
 
 		siennaBrownMinHeight = self.siennaBrownMinHeight
 		burlyWoodMinHeight = self.burlyWoodMinHeight
@@ -205,81 +205,112 @@ class TerrainMesh:
 
 		siennaBrownRGB = (142, 107, 35)
 		burlyWoodRGB = (255, 211, 155)
-		deltaRGB = ( 103, 104, 120)			# delta RGB per deltaHeight unit
-		
-		deltaHeight = burlyWoodMinHeight- siennaBrownMinHeight 
 
-		# selRGB = siennaBrownRGB+ deltaRGB/deltaHeight * X
-		#Here X will be difference between burlyWoodMinHeight and vertHeight
-		heightDiff = burlyWoodMinHeight - vertHeight
+		# Find gradient ratios/ weights of max and min colors
+		maxColorFactor = self.findMaxColorGradientFactor(siennaBrownMinHeight,
+														 burlyWoodMinHeight,
+														 vertHeight)
+		minColorFactor = 1.0 - maxColorFactor
 
 		# Calculate the RGB values of selRGB
-		selectedColRed = int (siennaBrownRGB[0] + 
-								deltaRGB[0]/deltaHeight * heightDiff)
-		selectedColGreen = int (siennaBrownRGB[1] + 
-								deltaRGB[1]/deltaHeight * heightDiff)
-		selectedColBlue = int (siennaBrownRGB[2] +
-								deltaRGB[2]/deltaHeight * heightDiff)
+		selectedColRed = int (siennaBrownRGB[0]*minColorFactor + 
+								burlyWoodRGB[0]*maxColorFactor)
+		selectedColGreen = int (siennaBrownRGB[1]*minColorFactor + 
+								burlyWoodRGB[1]*maxColorFactor)
+		selectedColBlue = int (siennaBrownRGB[2]*minColorFactor +
+								burlyWoodRGB[2]*maxColorFactor)
 
-		print "dirt to dirt!", (selectedColRed, selectedColGreen, selectedColBlue)
 		return  (selectedColRed, selectedColGreen, selectedColBlue)
 
+
 	def mapColorDirtSnowGradient(self, vertHeight):
-		# Linearly blend RGB values of burlyWoodRGB and snowWhiteRGB
-		# depending on height.
+		# Calculate color by weighted average of min and maxColors
+		# for this region of terrain.
 
 		burlyWoodMinHeight = self.burlyWoodMinHeight
 		snowWhiteMinHeight = self.snowWhiteMinHeight
 
 		burlyWoodRGB = (255, 211, 155)
 		snowWhiteRGB = (245, 245, 245)
-		deltaRGB = ( -10, 34, 90)			# delta RGB per deltaHeight unit
-		
-		deltaHeight = snowWhiteMinHeight - burlyWoodMinHeight
 
-		# selRGB = burlyWoodRGB+ deltaRGB/deltaHeight * X
-		#Here X will be difference between snowWhiteMinHeight and vertHeight
-		heightDiff = snowWhiteMinHeight - vertHeight
+		# Find gradient factors / weights of bound colors
+		maxColorFactor = self.findMaxColorGradientFactor(burlyWoodMinHeight,
+														 snowWhiteMinHeight,
+														 vertHeight)
+		minColorFactor = 1.0 - maxColorFactor
 
 		# Calculate the RGB values of selRGB
-		selectedColRed = int (burlyWoodRGB[0] + 
-								deltaRGB[0]/deltaHeight * heightDiff)
-		selectedColGreen = int (burlyWoodRGB[1] + 
-								deltaRGB[1]/deltaHeight * heightDiff)
-		selectedColBlue = int (burlyWoodRGB[2] +
-								deltaRGB[2]/deltaHeight * heightDiff)
+		selectedColRed = int (burlyWoodRGB[0]*minColorFactor + 
+								snowWhiteRGB[0]*maxColorFactor)
+		selectedColGreen = int (burlyWoodRGB[1]*minColorFactor + 
+								snowWhiteRGB[1]*maxColorFactor)
+		selectedColBlue = int (burlyWoodRGB[2]*minColorFactor +
+								snowWhiteRGB[2]*maxColorFactor)
 
-		print "dirt to snow!", (selectedColRed, selectedColGreen, selectedColBlue)
 		return  (selectedColRed, selectedColGreen, selectedColBlue)
 
+
 	def mapColorSnowSnowGradient(self, vertHeight):
-		# Linearly blend RGB values of burlyWoodRGB and snowWhiteRGB
-		# depending on height.
+		# Calculate color by weighted average of min and maxColors
+		# for this region of terrain.
 
 		offSnowWhiteMinHeight = self.snowWhiteMinHeight
 		pureWhiteSnowMinHeight = self.pureWhiteSnowMinHeight
 
 		offSnowWhiteRGB = (245, 245, 245)
 		pureSnowWhiteRGB = (255, 255, 255)
-		deltaRGB = ( 10, 10, 10)			# delta RGB per deltaHeight unit
-		
-		deltaHeight = pureWhiteSnowMinHeight - offSnowWhiteMinHeight
 
-		# selRGB = offSnowWhiteRGB+ deltaRGB/deltaHeight * X
-		#Here X will be difference between pureSnowWhiteMinHeight 
-		# and vertHeight
-		heightDiff = snowWhiteMinHeight - vertHeight
+		# Calculate the weights of the bound colors
+		maxColorFactor= self.findMaxColorGradientFactor(offSnowWhiteMinHeight,
+														pureWhiteSnowMinHeight,
+														vertHeight)
+		minColorFactor= 1.0- maxColorFactor
 
 		# Calculate the RGB values of selRGB
-		selectedColRed = int (offSnowWhiteRGB[0] + 
-								deltaRGB[0]/deltaHeight * heightDiff)
-		selectedColGreen = int (offSnowWhiteRGB[1] + 
-								deltaRGB[1]/deltaHeight * heightDiff)
-		selectedColBlue = int (offSnowWhiteRGB[2] +
-								deltaRGB[2]/deltaHeight * heightDiff)
-		
-		print "snow to snow!", (selectedColRed, selectedColGreen, selectedColBlue)
+		selectedColRed = int (offSnowWhiteRGB[0]*minColorFactor + 
+								pureSnowWhiteRGB[0]*maxColorFactor)
+		selectedColGreen = int (offSnowWhiteRGB[1]*minColorFactor + 
+								pureSnowWhiteRGB[1]*maxColorFactor)
+		selectedColBlue = int (offSnowWhiteRGB[2]*minColorFactor +
+								pureSnowWhiteRGB[2]*maxColorFactor)
+
 		return  (selectedColRed, selectedColGreen, selectedColBlue)
+
+	def restrictRGBValue(self, colorRed, colorGreen, colorBlue):
+		# RGB values must be output in range [0.0, 1.0]
+		# Don't allow for outputed colors to be above 255/255.0 or below 0
+		minValue = 0
+		maxValue = 255/255.0
+		maxCompVal = self.maxColorCompVal
+
+		adjFloatingPointRGB = (colorRed/maxCompVal,colorGreen/maxCompVal,
+														colorBlue/maxCompVal)
+
+		(adjColorRed, adjColorGreen, adjColorBlue) = adjFloatingPointRGB
+		if (adjColorRed > maxValue):
+			adjColorRed = maxValue
+		elif (adjColorRed < minValue):
+			adjColorRed = minValue
+
+		if (adjColorGreen > maxValue):
+			adjColorGreen = maxValue
+		elif (adjColorGreen < minValue):
+			adjColorGreen = minValue
+
+		if (adjColorBlue > maxValue):
+			adjColorBlue = maxValue
+		elif (adjColorBlue < minValue):
+			adjColorBlue = minValue
+
+		return (adjColorRed, adjColorGreen, adjColorBlue)
+
+	def findMaxColorGradientFactor(self, minHeight, maxHeight, vertHeight):
+		# Return the fraction :
+		# (vertHeight - minHeight)/ (maxHeight - minHeight)
+		# that calculates the fraction of proximity of vertHeight to maxHeight
+		# in reference to minHeight
+
+		return (vertHeight - minHeight)/(maxHeight - minHeight)
 
 	def findHeightInHeightmap( self, pixelX, pixelY):
 		# Finds the height at pt (pixelX,pixelY)
@@ -305,6 +336,7 @@ class TerrainMesh:
 		greenLuminance = 0.587
 		blueLuminance = 0.114
 
+		# Maximum height value is (1.0)*255
 		return (redLuminance*red + greenLuminance*green + blueLuminance*blue) 
 	
 	def drawValley(self):

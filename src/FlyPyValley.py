@@ -47,7 +47,7 @@ class PyOculusValleyAnimation(object):
 		# Draw miscellaneous
 		
 		# Clear color and depth buffers
-		glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
+		#glClearColor(192/255.0, 192/255.0, 192/255.0, 0.0)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 		# Reset projecction matrix
@@ -191,7 +191,7 @@ class PyOculusValleyAnimation(object):
 
 
 		self.valleyMesh = TerrainMesh()
-		heightMapPath = "../rsc/U-shapedCliffValley.bmp"
+		heightMapPath = "../rsc/yosemiteValley.bmp"
 		if (self.valleyMesh.loadHeightmap(heightMapPath) == False):
 			print "Error loading heightmap!"
 			sys.exit(1)
