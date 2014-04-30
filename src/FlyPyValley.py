@@ -1,8 +1,9 @@
 # FlyPyValley.py
 
-from OculusCamera import *
+from OculusCamera import *	# Handles orientation and movement around world
 from TerrainMesh2 import *	# Version 2 works better!
 from MenuWindow import *	# This is used to open a main menu window 
+from GameClient import *	# Used for multiplayer connection to server
 
 # PyOpenGl modules
 from OpenGL.GL import *
@@ -12,6 +13,8 @@ from OpenGL.arrays import vbo # Enables use of VBOs
 
 # For random choosing of the heightmap when multiplayer is disabled
 import random
+# Used when multiplayer is enabled to handle both connection and rendering 
+import thread	
 
 
 class FlyPyValleyGame(object):
@@ -26,14 +29,41 @@ class FlyPyValleyGame(object):
 		selectedHeightmap = None
 
 		# If multiplayer enabled, then use "BlotchyValley.bmp"
+		#  and init gameClient
 		if (multiplayerFlag == True):	
 			selectedHeightmap = "BlotchyValley.bmp"
+			self.initGameClient()
 		else:
 			selectedHeightmap = random.choice(heightmapNamesList)
 
 		# Save the selectedHeightmap for loading later
 		print "Using the %s heightmap!\n\n" % selectedHeightmap
 		self.heightmapPath = selectedHeightmap
+
+	def initGameClient(self):
+
+		self.remoteHost = '128.237.68.111'	# IP address of GameServer
+		self.gameComPort = 3210				# Arbitrary mutual port number
+		self.playerNum = -1
+		
+		# Init GameClient instance
+		self.gameClient = GameClient(self.remoteHost, self.gameComPort)
+
+		# Init the game connection
+		result = self.gameClient.initConnection()
+
+		if (result != None):
+			# Connection achieved! Init comms returned playerNumber
+			print "Connection achieved! PlayerNum: %d" % result
+			self.playerNum = result	
+		else:
+			# Connection to server failed! Revert to singleplayer
+			print "Connection failed! Reverting back to singleplayer"
+			self.multiplayerFlag = False	# Reset multiplayerFlag
+			return
+
+		# Start a thread that will run 
+
 
 	def animationTimer(self):
 		# Update orientation of Oculus!
