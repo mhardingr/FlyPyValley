@@ -2,6 +2,7 @@
 
 from OculusCamera import *
 from TerrainMesh2 import *	# Version 2 works better!
+from MenuWindow import *	# This is used to open a main menu window 
 
 # PyOpenGl modules
 from OpenGL.GL import *
@@ -229,5 +230,9 @@ class FlyPyValleyGame(object):
 			pass
 		self.initGL()
 
-myAnimation = FlyPyValleyGame(multiplayer = False)
+	def displayMenu(self):
+		# NOTE: This code will block until a key is pressed!
+		gameMenu = MenuWindow()	
+
+myAnimation = FlyPyValleyGame(multiplayerFlag = False)
 myAnimation.main() 

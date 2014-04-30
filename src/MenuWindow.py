@@ -17,21 +17,30 @@ class MenuWindow():
 	def __init__(self):
 
 		root= Tk()
+		root.wm_title("Welcome to FlyPy Valley!")	# Set the window title
+
 		(winWidth, winHeight) = (640, 400)
 		self.canvas = Canvas(root, width=winWidth, height=winHeight)
-		splashImPath = "../rsc/FlyPyValleySplash.gif"
+		splashMenuImPath = "../rsc/FlyPyValleySplashScreen.gif"
+		splashInstructImPath = "../rsc/FlyPyValleySplashInstructions.gif"
+
+
 		# PhotoImage is a class within Tkinter recommended for these purposes
-		self.menuImage = PhotoImage(file=splashImPath)	
+		self.menuImage = PhotoImage(file=splashMenuImPath)	
+		self.instructImage = PhotoImage(file = splashInstructImPath)
+
+		# Save number of keypresses
+		self.keypresses = 0
 
 		self.canvas.pack()	
 		# Draw the menu splash image permanently (no need for redrawllAll)
-		imCoords = (winWidth/2, winHeight/2)
-		self.canvas.create_image(imCoords, image=self.menuImage)
+		self.imCoords = (winWidth/2, winHeight/2)
+		self.canvas.create_image(self.imCoords, image=self.menuImage)
 
 		# Bind key events to root mainloop to be able to exit this menu!
 		root.bind("<Key>", lambda event: self.keyPressed(event))
 
-		self.root = root
+		self.root = root	# Save the root
 		self.startMainloop()
 
 	# Begin the root mainloop
@@ -40,9 +49,13 @@ class MenuWindow():
 
 
 	def keyPressed(self, event):
-		# Quit this pyglet application to allow for the FlyPyValley
-		# game to continue
-		self.root.quit()
+		# Quit after showing the second splash screen/instructions
+		if (self.keypresses >= 1):
+			self.root.quit()	
+		else:
+			# Load up the first instruction screen for menu
+			self.canvas.create_image(self.imCoords, image=self.instructImage)
+			self.keypresses +=1
 
-myMenu = MenuWindow()
+#myMenu = MenuWindow()
 

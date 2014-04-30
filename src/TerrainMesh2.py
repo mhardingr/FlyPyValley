@@ -5,7 +5,6 @@
 # adapted:
 # http://nehe.gamedev.net/tutorial/vertex_buffer_objects/22002/
 
-import Struct
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
