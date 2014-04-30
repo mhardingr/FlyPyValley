@@ -42,17 +42,16 @@ class GameServer(object):
 		# When client first connects, it will recv this serverDataList
 		# and be assigned a player number, which it will use to parse the data:
 		
-		# playerTupleData will store (xPos, yPos, zPos, xRot, yRot, zRot)
-		self.resetPlayerData = resetPlayerData = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+		# playerTupleData will store (xPos, yPos, zPos)
+		self.resetPlayerData = resetPlayerData = (0.0, 0.0, 0.0)
 		self.player1TupleData = resetPlayerData
 		self.player2TupleData = resetPlayerData
 		self.player3TupleData = resetPlayerData
 		self.player4TupleData = resetPlayerData
 
 		self.serverDataList = [self.numPlayersConnected, 
-								self.player1TupleData, 
-								self.player2TupleData,self.player3TupleData,
-								self.player4TupleData]
+								self.player1TupleData,self.player2TupleData,
+								self.player3TupleData,self.player4TupleData]
 
 		maxConnections = 4
 		self.gameServer.listen(maxConnections) # Wait for (4 max) connections

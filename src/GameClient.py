@@ -49,9 +49,9 @@ class GameClient(object):
 
 		# Second, recieve all the player data from server (passed as string)
 		maxRecieveBytes = self.maxRecieveBytes
-		allPlayerData = self.clientSocket.recv(maxRecieveBytes)
-
-		return allPlayerData
+		allPlayerDataStr = self.clientSocket.recv(maxRecieveBytes)
+		allPlayerDataList = eval(allPlayerDataStr)
+		return allPlayerDataList
 
 	def closeConnection(self):
 		# Need to let the server know that this socket is disconnecting

@@ -37,6 +37,10 @@ class Camera(object):
 		self.motionSpeed = .75 # world units per frame
 		self.turnSpeed = 0.75 # deg of rotation per fram
 
+	def getPositionXYZ(self):
+		# Return a tuple of the position data of this camera
+		return (self.xPos, self.yPos, self.zPos)
+
 	def setRotationXYZ(self, xRot, yRot, zRot):
 		self.xRot = xRot
 		self.yRot = yRot

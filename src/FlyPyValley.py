@@ -21,12 +21,17 @@ class FlyPyValleyGame(object):
 	def __init__(self, multiplayerFlag = False):
 		self.multiplayerFlag = multiplayerFlag
 
+		(self.width, self.height) = (1600, 900)		# Screen is 1600 X 900
+
 		# Init list of possible bmp heightmaps to load as terrains
 		heightmapNamesList = ["aoneillSpoonValley.bmp", "AtollValley.bmp",
 							  "BumpyTerrain.bmp", "CanyonyValley.bmp",
 							  "RollingValley.bmp", "BlotchyValley.bmp"]
 
 		selectedHeightmap = None
+
+		self.initCameraData()
+		self.initAnimationData()
 
 		# If multiplayer enabled, then use "BlotchyValley.bmp"
 		#  and init gameClient
@@ -40,11 +45,31 @@ class FlyPyValleyGame(object):
 		print "Using the %s heightmap!\n\n" % selectedHeightmap
 		self.heightmapPath = selectedHeightmap
 
+	def initCameraData(self):
+		# Create an Oculus obj in order to be able to fly around world
+		# Starting position well above the rendered terrain
+		self.oculus = OculusCamera(self)		
+		(initXPos, initYPos, initZPos) = ( 0.0, +220.0, 0.0)
+		self.oculus.setWorldCoordinates(initXPos, initYPos, initZPos)
+		# Init camera data (field of View ang)
+		self.degFOV = 60.0 		# Field of view angle
+		self.nearClip = 0.2 	# Don't render objects that are too close
+		self.farClip = 1000		# Don't render too distant objects
+
+	def initAnimationData(self):
+		# Init a dict to aid in mapping keypresses to T/F values
+		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
+								"RIGHT":False}
+		self.timerDelay = 10 # 10 millis, want as many fps as possible
+
 	def initGameClient(self):
 
 		self.remoteHost = '128.237.68.111'	# IP address of GameServer
 		self.gameComPort = 3210				# Arbitrary mutual port number
 		self.playerNum = -1
+		self.threadExitFlag = False		# Exit condition for comms threads
+		# Init game instance's copy of serverData
+		self.clientDataList = []	# Will hold [numPlayers, (playerData),...]
 		
 		# Init GameClient instance
 		self.gameClient = GameClient(self.remoteHost, self.gameComPort)
@@ -62,8 +87,30 @@ class FlyPyValleyGame(object):
 			self.multiplayerFlag = False	# Reset multiplayerFlag
 			return
 
-		# Start a thread that will run 
+		# Start a thread that will run server-client comms alongside
+		# rendering of the world until program closes.
+		emptyArgsTuple = ()
+		thread.start_new_thread(lambda : self.communicateWithGameServer(),
+															 emptyArgsTuple)
 
+	def communicateWithGameServer(self):
+		# "Endlessly" converse with the server until user decides to
+		# close program (pressing ESC)
+		while (self.threadExitFlag != True):
+			# Send and recieve playerData to the server
+			currPlayerDataList = self.oculus.getPositionXYZ()
+			result = self.gameClient.converseWithServer(currPlayerDataList)
+
+			# Save the server output in clientData
+			self.updateClientDataList(result)
+
+		# Out of the while loop: close the connection!
+		print "Closing the connection!!"
+		self.gameClient.closeConnection()
+
+	def updateClientDataList(self,result):
+		print result
+		self.clientDataList = result
 
 	def animationTimer(self):
 		# Update orientation of Oculus!
@@ -90,8 +137,6 @@ class FlyPyValleyGame(object):
 
 
 	def renderWorld(self):
-		# ~30 lines of code!
-
 		# Routine:
 		# Clear buffer bits
 		# loadIdentity for Projection plane
@@ -141,14 +186,9 @@ class FlyPyValleyGame(object):
 		keysym = eventArgs[0]
 		
 		if (keysym == chr(escKeyAscii)): # quit if pressed escape key 
+			if (self.multiplayerFlag == True):
+				self.threadExitFlag = True # Quit the connection with server!
 			sys.exit()	
-		elif (keysym == 'i'):
-			# Reset the position of the camera
-
-			###### #BUG, oculus must be re-calibrated not reset
-			self.camera.setRotationXYZ(0.0,0.0,0.0)
-			self.oculus.setRotationXYZ(0.0,0.0,0.0)
-
 		elif (keysym == "+"):
 			OculusCamera.noseToPupilDistance += 0.025	# Manual offset 
 			print OculusCamera.noseToPupilDistance
@@ -222,7 +262,7 @@ class FlyPyValleyGame(object):
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
 		glutSpecialUpFunc(lambda *eventArgs: self.keyUpEventHandler(eventArgs))
 		# Fullscreen
-		glutFullScreen()
+		#glutFullScreen()
 
 		# Call Timer function as with TKinter
 		self.animationTimer()
@@ -231,30 +271,21 @@ class FlyPyValleyGame(object):
 		glutMainLoop()
 
 	def initWorldData(self):
-		self.oculus = OculusCamera(self)
-		(initXPos, initYPos, initZPos) = ( 0.0, +220.0, 0.0)
-		self.oculus.setWorldCoordinates(initXPos, initYPos, initZPos)
-		self.keyStates = {"UP":False, "DOWN":False, "LEFT":False, 
-								"RIGHT":False}
-		self.timerDelay = 10 # 10 millis, want as many fps as possible
-		self.degFOV = 60.0
-		self.nearClip = 0.2
-		self.farClip = 1000
-
 		# Create TerrainMesh object to load the selectedHeightmap file
 		self.valleyMesh = TerrainMesh()
 		heightmapRelativePath = "../rsc/" + self.heightmapPath
 		# If there is an error in opening the file, close the program
-		# AND SOCKETS!######################################
 		if (self.valleyMesh.loadHeightmap(heightmapRelativePath) == False):
 			print "Error loading heightmap!"
+			if (self.multiplayerFlag == True):
+				self.threadExitFlag = True 		# Quit the socket connection!
 			sys.exit(1)
 
 	def main(self):
 		# Output the menu image on a pyglet window instance
 		self.displayMenu()	# This will block until a key press
 
-		(self.width, self.height) = (600, 480)
+
 		self.initWorldData()
 		if(self.multiplayerFlag == True):
 			pass
@@ -264,5 +295,5 @@ class FlyPyValleyGame(object):
 		# NOTE: This code will block until a key is pressed!
 		gameMenu = MenuWindow()	
 
-myAnimation = FlyPyValleyGame(multiplayerFlag = False)
+myAnimation = FlyPyValleyGame(multiplayerFlag = True)
 myAnimation.main() 
