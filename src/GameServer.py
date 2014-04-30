@@ -98,6 +98,9 @@ class GameServer(object):
 			self.player3TupleData = self.resetPlayerData
 		else:
 			self.player4TupleData = self.resetPlayerData
+
+		# Player is disconnecting, so decrement numPlayersConnected
+		self.numPlayersConnected -= 1
 		self.updateServerData()
 
 	def updateServerData(self):

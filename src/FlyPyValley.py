@@ -79,11 +79,11 @@ class FlyPyValleyGame(object):
 
 		if (result != None):
 			# Connection achieved! Init comms returned playerNumber
-			print "Connection achieved! PlayerNum: %d" % result
+			print "\nConnection achieved! PlayerNum: %d" % result
 			self.playerNum = result	
 		else:
 			# Connection to server failed! Revert to singleplayer
-			print "Connection failed! Reverting back to singleplayer"
+			print "\nConnection failed! Reverting back to singleplayer\n"
 			self.multiplayerFlag = False	# Reset multiplayerFlag
 			return
 
@@ -109,7 +109,7 @@ class FlyPyValleyGame(object):
 		self.gameClient.closeConnection()
 
 	def updateClientDataList(self,result):
-		print result
+		#print result
 		self.clientDataList = result
 
 	def animationTimer(self):
@@ -188,13 +188,13 @@ class FlyPyValleyGame(object):
 		if (keysym == chr(escKeyAscii)): # quit if pressed escape key 
 			if (self.multiplayerFlag == True):
 				self.threadExitFlag = True # Quit the connection with server!
-			sys.exit()	
+			self.cleanup()
 		elif (keysym == "+"):
 			OculusCamera.noseToPupilDistance += 0.025	# Manual offset 
-			print OculusCamera.noseToPupilDistance
+			print "Nose to pupil distance", OculusCamera.noseToPupilDistance
 		elif (keysym == "-"):
 			OculusCamera.noseToPupilDistance -= .025	# Manual offset 
-			print OculusCamera.noseToPupilDistance
+			print "Nose to pupil distance", OculusCamera.noseToPupilDistance
 
 	def keyUpEventHandler(self, eventArgs):	# Handles the release of arrow key
 		keysym = eventArgs[0]
@@ -262,7 +262,7 @@ class FlyPyValleyGame(object):
 		glutSpecialFunc(lambda *eventArgs: self.specialKeyEvent(eventArgs)) 
 		glutSpecialUpFunc(lambda *eventArgs: self.keyUpEventHandler(eventArgs))
 		# Fullscreen
-		#glutFullScreen()
+		glutFullScreen()
 
 		# Call Timer function as with TKinter
 		self.animationTimer()
@@ -279,13 +279,11 @@ class FlyPyValleyGame(object):
 			print "Error loading heightmap!"
 			if (self.multiplayerFlag == True):
 				self.threadExitFlag = True 		# Quit the socket connection!
-			sys.exit(1)
+			self.cleanup()				# Cleanup 'main''s thread
 
-	def main(self):
+	def run(self):
 		# Output the menu image on a pyglet window instance
 		self.displayMenu()	# This will block until a key press
-
-
 		self.initWorldData()
 		if(self.multiplayerFlag == True):
 			pass
@@ -295,5 +293,12 @@ class FlyPyValleyGame(object):
 		# NOTE: This code will block until a key is pressed!
 		gameMenu = MenuWindow()	
 
+
+	def cleanup(self):
+		glutLeaveMainLoop()		# Kill the animation mainloop
+
+		print "Exiting main program thread"
+		return
+
 myAnimation = FlyPyValleyGame(multiplayerFlag = True)
-myAnimation.main() 
+myAnimation.run() 

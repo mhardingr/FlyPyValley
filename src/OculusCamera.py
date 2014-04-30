@@ -98,9 +98,9 @@ class OculusCamera(Camera):
 		(yRotRads, xRotRads, zRotRads) = pyrift.get_orientation()
 		#print (xRotRads, yRotRads, zRotRads)
 
-		# Empirical tests show that reducing roll by 95% creates a more
+		# Empirical tests show that reducing roll by 50% creates a more
 		# realistic world tilt
-		rollReduceFactor = 0.2
+		rollReduceFactor = -0.5
 		
 		# Convert rotation data to degrees for Opengl functions
 		xRotDegs = -xRotRads * OculusCamera.degsPerRadian
