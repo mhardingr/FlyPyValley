@@ -220,11 +220,14 @@ class FlyPyValleyGame(object):
 			sys.exit(1)
 
 	def main(self):
+		# Output the menu image on a pyglet window instance
+		self.displayMenu()	# This will block until a key press
+
 		(self.width, self.height) = (600, 480)
 		self.initWorldData()
 		if(self.multiplayerFlag == True):
 			pass
 		self.initGL()
 
-myAnimation = FlyPyValleyGame()
+myAnimation = FlyPyValleyGame(multiplayer = False)
 myAnimation.main() 
