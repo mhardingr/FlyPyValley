@@ -232,7 +232,6 @@ class FlyPyValleyGame(object):
 
 	def drawOtherPlayer(self, playerNum, playerPosData):
 		# Draw this player in the world using the appropriate color 
-		print "drawing the player!"
 		# If no color saved for this player, then save a random color
 		if (playerNum not in self.playerColorsDict):
 			playerNumColor = self.randomGLColor()

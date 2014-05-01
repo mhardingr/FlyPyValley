@@ -35,7 +35,7 @@ class Camera(object):
 		self.zLineOfSight = 1.0 / (3**2)
 
 		self.motionSpeed = .75 # world units per frame
-		self.turnSpeed = 0.75 # deg of rotation per fram
+		self.turnSpeed = 1.5 # deg of rotation per fram
 
 	def getPositionXYZ(self):
 		# Return a tuple of the position data of this camera
