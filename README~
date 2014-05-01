@@ -1,0 +1,32 @@
+Project Readme:
+
+Thank you for trying FlyPy Valley!
+
+FlyPy Valley immerses the user in a 3D virtual-reality experience using the Oculus Rift. Plug in your Oculus Rift (designed for development kit version) and run the FlyPyValley.py file (with appropriate modules installed, see below) to begin flying around a 3D textured valley. Look around you in the Oculus Rift and use the LEFT and RIGHT arrow keys to help orient you in the 3D world. Fly forward or backward using the UP or DOWN arrows, respectively.
+
+An added bonus for online multiplayer!:
+Run the GameServer.py in terminal on an appropriate machine (preferrably a desktop or a computer with a stable internet connection and/or a static IP address), copy and paste the printed IP address from the terminal output into the FlyPyVallley.py file's variable "self.remoteHost" on the 'client' machines (one of which can be on the server machine). Then plug in Oculus Rift's into each machine, run FlyPyValley.py (after setting the multiplayerFlag at the end of the file to True) and enjoy flying around a 3D valley with your friends!
+See MultiplayerHowTo.txt for more details...
+
+Important Modules:
+socket 			(pre-installed with Python 2.7 for Linux)
+
+Image	(extract tar.gz file from this link <http://effbot.org/downloads/Imaging-1.1.7.tar.gz> and follow build instructions in README)
+
+numpy (follow instructions at <http://docs.scipy.org/doc/numpy/user/install.html> to download and install on appropriate platform)
+
+math 			(pre-installed module with Python 2.7)
+
+time 			(pre-installed module with Python 2.7)
+
+Tkinter			(pre-installed module with Python 2.7)
+
+Queue			(pre-installed module with Python 2.7)
+
+thread	 		(pre-installed module with Python 2.7)
+
+PyOpenGL module (download appropriate compressed file or exe file at <https://pypi.python.org/pypi/PyOpenGL/3.1.0b2> for version 3.1.0b2 of PyOpenGL, extract the files to an appropriate location, and run "python setup.py" in the terminal in this directory)
+
+
+
+
