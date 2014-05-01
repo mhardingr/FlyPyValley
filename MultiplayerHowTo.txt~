@@ -1,0 +1,51 @@
+Welcome to FlyPy Valley and thank you for your interest in my programming class project.
+
+This file will show you how to enable "Online Multiplayer" for the FlyPy Valley 3D world roam-style game.
+
+Overview: In order to enable multiplayer so you can fly alongside your friends online, you first need GameServer.py running on a machine with a (preferrably static) IP address and an internet connection. The machines that connect to this GameServer instance are called GameClients, which are instantiated with every instance of the FlyPyValley.py with the "multiplayerFlag" set to True (as long as the connection is achieved).
+NOTE, the machine that acts as the "GameServer" can also run an FlyPyValley.py instance, either in singleplayer or in multiplayer with remotely connected players. Thus, the server machine can separately communicate with itself as a GameClient (more later).
+
+Steps:
+1) Find a machine that will act as a suitable server (desktop, or actual server machine if available - laptops work, too!).
+
+2) Locate the IP address of this machine (recommended: use whatismyip.com). Write this number down. 
+
+3) On this machine, open the GameServer.py file (in the src folder) in an editor and locate the variable 'hostIP' (around line 115). Replace the string set at this variable with your machine's IP address that you had just written down and save the file.
+
+(continued at step 4 below)
+
+---- Your GameServer machine can now be instantiated by running GameServer.py----
+If playing with friends, be sure to give them your GameServer machine's IP address as well and instruct them to follow the steps (4-7 below) as well to be able to connect.
+
+Recommended way to run GameServer.py:
+Open your file browser program and locate the FlyPy 'src' directory. If possible, right click in this directory and open a Terminal/Command Line in this directory. Otherwise, 'cd' into this directory using the Terminal/Command Line functionality.
+GameServer.py should in this directory: in the Command Line/Terminal program, type in 'python GameServer.py' and press enter. Your GameServer is now set up.
+
+Recommend way to quit GameServer.py
+As you should be running GameServer.py in Terminal/Command Line, you can use the 'Ctrl+C' key combination to interrupt the program and stop it from further running. Otherwise, GameServer.py would run until your machine shuts down.
+-------------
+
+4) Now that you have GameServer.py setup, you must make small one-line changes in FlyPyValley.py. Open up FlyPyValley.py (in the src folder) in your preferred editor.
+
+5) In FlyPyValley.py, find the initGameClient() function (or "Ctrl + F" the words "self.remoteHost") and find the instance variable "self.remoteHost".
+Replace the IP address string to the right with the IP address string you input in your GameServer.py file.
+
+6) To finish enabling multiplayer, go to the end of the FlyPyValley.py file (around line 304) and find the variable "myAnimation" being instantiated as a FlyPyValleyGame object.
+Change the "multiplayerFlag" parameter to True for multiplayer to be enabled (False would mean only instantiate the game as a single player.)
+
+7) Save the changes to FlyPyValley.py
+
+Your game is now enabled for online multiplayer on the GameServer machine of your choosing.
+
+
+NOTE: To disable playing online multiplayer, simply set the 'multiplayerFlag' parameter changed in FlyPyValley.py back to False. The game will continue without connecting to a GameServer machine and will load random terrains for you to fly around in alone.
+
+ 
+
+
+
+
+
+
+ 
+

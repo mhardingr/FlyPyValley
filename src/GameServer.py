@@ -43,7 +43,7 @@ class GameServer(object):
 		# and be assigned a player number, which it will use to parse the data:
 		
 		# playerTupleData will store (xPos, yPos, zPos)
-		self.resetPlayerData = resetPlayerData = (0.0, 0.0, 0.0)
+		self.resetPlayerData = resetPlayerData = (None, None, None)
 		self.player1TupleData = resetPlayerData
 		self.player2TupleData = resetPlayerData
 		self.player3TupleData = resetPlayerData
@@ -55,7 +55,7 @@ class GameServer(object):
 
 		maxConnections = 4
 		self.gameServer.listen(maxConnections) # Wait for (4 max) connections
-		print "Server started! Address:", hostname
+		print "Server started! My Address:", hostname
 
 		self.acceptConnections()		# Begin accepting incoming connections
 		
@@ -63,16 +63,18 @@ class GameServer(object):
 		while(True):	# Loop is blocked until server accepts a connection
 			# Connect with client
 			(intermediate, clientAddr) = self.gameServer.accept() 
-			# Start a new thread to handle/communcate with client
-
 
 			print "Connection made with", clientAddr
 			self.numPlayersConnected += 1
-			initStr = "Thank you for connecting, you are player number %d" % self.numPlayersConnected
-			currPlayer = self.numPlayersConnected
+			pNum = self.numPlayersConnected # This client's playerNum is saved
+			initStr = "New connection! You are player number %d" % pNum
 			emptyTuple = ()
-			intermediate.send(initStr)
-			thread.start_new_thread(lambda: self.handleConnection(currPlayer,
+			# Send welcome to gameClient with assigned pNum
+			intermediate.send(initStr)	
+
+			# Start a new thread to handle this new connection as the
+			# while loop is blocked with every gameServer.accept() call
+			thread.start_new_thread(lambda: self.handleConnection(pNum,
 									 intermediate), emptyTuple)
 
 	def handleConnection(self, playerNum, intermediateSock):
@@ -81,15 +83,36 @@ class GameServer(object):
 		# while Server code must recv first and send second
 		exitFlag = False
 		while (exitFlag != True):
-			dataRec = intermediateSock.recv(1024)
-			print dataRec 
-			intermediateSock.send(str(self.serverDataList))
-			if (dataRec == "Close"):
+			dataRecStr = intermediateSock.recv(1024)
+			if (dataRecStr == "Close"):
 				exitFlag = True
 				self.handlePlayerClose(playerNum)
-			self.updateServerData()
+				continue
+
+			else:
+				print dataRecStr
+				dataRecList = eval(dataRecStr)
+				# Data received is the curr communicating player's posData
+				# update playerData
+				self.updatePlayerData(playerNum,dataRecList) 
+				intermediateSock.send(str(self.serverDataList))
+				self.updateServerData()
+
+	def updatePlayerData(self, playerNum, playerCoords):
+		# Save the updated playerCoords to playerNum's tupleData
+		if (playerNum == 1):
+			self.player1TupleData = playerCoords
+		elif(playerNum == 2):
+			self.player2TupleData = playerCoords
+		elif(playerNum == 3):
+			self.player3TupleData = playerCoords
+		elif(playerNum == 4):
+			self.player4TupleData = playerCoords
+		else:
+			print "Sorry, cannot hold more than 4 players' worth of data!"
 
 	def handlePlayerClose(self, playerNum):
+		# Reset the player data for playerNum that just quit
 		if (playerNum == 1):
 			self.player1TupleData = self.resetPlayerData
 		elif (playerNum == 2):

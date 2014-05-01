@@ -49,9 +49,13 @@ class GameClient(object):
 
 		# Second, recieve all the player data from server (passed as string)
 		maxRecieveBytes = self.maxRecieveBytes
-		allPlayerDataStr = self.clientSocket.recv(maxRecieveBytes)
-		allPlayerDataList = eval(allPlayerDataStr)
-		return allPlayerDataList
+		try:
+			allPlayerDataStr = self.clientSocket.recv(maxRecieveBytes)
+			allPlayerDataList = eval(allPlayerDataStr)
+			return allPlayerDataList
+		except:
+			print "System interupted conversation! Trying again!"
+			return
 
 	def closeConnection(self):
 		# Need to let the server know that this socket is disconnecting
