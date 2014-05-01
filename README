@@ -28,7 +28,14 @@ Queue			(pre-installed module with Python 2.7)
 
 thread	 		(pre-installed module with Python 2.7)
 
-PyOpenGL module (download appropriate compressed file or exe file at <https://pypi.python.org/pypi/PyOpenGL/3.1.0b2> for version 3.1.0b2 of PyOpenGL, extract the files to an appropriate location, and run "python setup.py" in the terminal in this directory)
+pyrift			(download the zip file on GitHub link:
+<https://github.com/wwwtyro/pyrift>
+Extract the folder and then use the terminal/command line to install the module into your Python path by following these instructions:
+1) cd into the downloaded/extracted directory.
+2) enter "python setup.py install" to install the setup.py file
+3) You may need root access, see online for appropriate Terminal/CMD commands for gaining root access (i.e., for Linux, use "sudo python setup.py install")
+
+PyOpenGL module 	(download appropriate compressed file or exe file at <https://pypi.python.org/pypi/PyOpenGL/3.1.0b2> for version 3.1.0b2 of PyOpenGL, extract the files to an appropriate location, and run "python setup.py install" in the terminal in this directory)
 
 
 
