@@ -186,8 +186,7 @@ class FlyPyValleyGame(object):
 		self.valleyMesh.drawValley()	# Render world!
 		
 		# In multiplayer mode, render the other players
-		if (self.multiplayerFlag==True): 
-			self.renderPlayers()		
+		if (self.multiplayerFlag==True): self.renderPlayers()
 		glPopMatrix()
 
 
@@ -198,9 +197,7 @@ class FlyPyValleyGame(object):
 		self.valleyMesh.drawValley()	# Render world!
 
 		# In multiplayer mode, render the other players
-		if (self.multiplayerFlag == True):
-			self.renderPlayers()
-		
+		if (self.multiplayerFlag == True): self.renderPlayers()
 		glPopMatrix()
 
 		glutSwapBuffers()
@@ -373,5 +370,5 @@ class FlyPyValleyGame(object):
 		print "Exiting main program thread"
 		return
 
-myAnimation = FlyPyValleyGame(multiplayerFlag = True)
+myAnimation = FlyPyValleyGame(multiplayerFlag = False)
 myAnimation.run() 
